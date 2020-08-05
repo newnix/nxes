@@ -72,10 +72,10 @@ PRIM(mod) {
 	if ((list != NULL) && (length(list) == 2)) {
 		a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
 		list = list->next;
-		a2 = (int64_t)strtol(getstr(list->term), (char **NULL), 10);
+		a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
 		mod = (uint64_t)(a1 % a2);
 	}
-	return mklist(mkstr(str("%lu", mod)), NULL);
+	return mklist(mkstr(str("%ld", mod)), NULL);
 }
 
 PRIM(count) {
