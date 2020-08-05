@@ -21,6 +21,63 @@ PRIM(echo) {
 	return true;
 }
 
+/* 
+ * Add some basic arithmetic operations,
+ * no attempt to avoid over/under-flows is made at this time,
+ * nor is any attempt made to validate inputs.
+ * TODO: Basic input validation and over/under-flow protection
+ * TODO: Consider rewriting to evaluate recursively, may need to wait until
+ * after tackling the tail call recursion issue mentioned in "TODO"
+ */
+PRIM(sum) {
+	int64_t sum = 0;
+	for (; list != NULL; list = list->next) {
+		sum += (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	}
+	return mklist(mkstr(str("%ld", sum)), NULL);
+}
+
+PRIM(mul) {
+	int64_t prod = 1;
+	for (; list != NULL; list = list->next) {
+		prod *= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	}
+	return mklist(mkstr(str("%ld", prod)), NULL);
+}
+
+/* 
+ * This operation requires some additional logic 
+ * to ensure proper behaviour.
+ */
+PRIM(div) {
+	int64_t quot = 0;
+	if ((list != NULL) && (list->next != NULL)) {
+		quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		for (list = list->next; list != NULL; list = list->next) {
+			quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		}
+		return mklist(mkstr(str("%ld", quot)), NULL);
+	} else {
+		fail("$&div", "Expected at least 2 integer arguments");
+	}
+}
+
+/* 
+ * Modulus operation, can't think of a reason why it should
+ * accept more than 2 arguments
+ */
+PRIM(mod) {
+	uint64_t mod = 0;
+	int64_t a1, a2;
+	if ((list != NULL) && (length(list) == 2)) {
+		a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		list = list->next;
+		a2 = (int64_t)strtol(getstr(list->term), (char **NULL), 10);
+		mod = (uint64_t)(a1 % a2);
+	}
+	return mklist(mkstr(str("%lu", mod)), NULL);
+}
+
 PRIM(count) {
 	return mklist(mkstr(str("%d", length(list))), NULL);
 }
@@ -306,6 +363,10 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(batchloop);
 	X(collect);
 	X(home);
+	X(sum);
+	X(mul);
+	X(div);
+	X(mod);
 	X(setnoexport);
 	X(vars);
 	X(internals);
