@@ -2,6 +2,7 @@
 
 #define	REQUIRE_PWD	1
 
+#include <stdint.h>
 #include "es.h"
 #include "prim.h"
 
