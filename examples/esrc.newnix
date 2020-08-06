@@ -1,0 +1,81 @@
+#!/usr/bin/env es
+## Simple es configuration script
+LANG=(en_US.UTF-8)
+TERM=(xterm-256color)
+path=(/sbin /bin /usr/sbin /usr/bin /usr/local/sbin /usr/local/bin $home^/bin $home^/bin/c)
+editors = (nvim kak vim vis ed)
+
+## Check for nvim and set it as the editor of choice
+fn geteditor {
+	for (e = $editors) {
+		catch @ {
+			## Exception handler, no else clause needed
+			{if {eq $1 return}
+				{$1 $2}}
+		} {
+			{%seq
+				{%pathsearch $e}
+				{return $e} ## Return the editor we found
+			}
+		}
+	}
+}
+
+## Settor function to automatically set EDITOR and VISUAL
+## to whatever the value of $editor is
+set-editor = @ {
+	local (set-EDITOR=)
+		EDITOR = $*
+	local (set-VISUAL=)
+		VISUAL = $*
+	result = $*
+}
+
+## Make reloading the config easier
+fn reload {
+	. $home^/.esrc
+}
+
+## Everything is vim
+fn vim {
+	$editor $*
+}
+
+## Create a '++' pseudo-operator, mutates state internally
+fn ++ i {
+	## The argument 'i' is meant to be a variable reference,
+	## used like so:
+	## ; x = 0
+	## ; ++ x
+	## ; echo $x
+	## 1
+	$i = <= {
+		$&sum $$i 1
+	}
+}
+
+## Creates simple equality checks, similar to '==' in C
+## or the '='/'eq?' forms in some lisp dialects
+fn eq a b {
+	~ $a $b
+}
+
+## Modified form to accept variable references instead of values
+fn veq a b {
+	~ $$a $$b
+}
+
+## Enable prettier printing of the current primitives
+fn primitives {
+	local (pi = 1)
+	let (plist = <= {$&primitives}) {
+		echo Found $#plist primitives:
+		for (p = $plist) {
+			echo $pi: $p
+			++ pi
+		}
+	}
+}
+
+## Automatically set editor related variables
+editor =<={geteditor}
