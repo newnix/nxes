@@ -78,6 +78,52 @@ PRIM(mod) {
 	return mklist(mkstr(str("%ld", mod)), NULL);
 }
 
+/*
+ * Create bitwise primitives
+ */
+PRIM(band) {
+	int64_t a1, a2;
+	a1 = a2 = 0;
+	if ((list == NULL) || (list->next == NULL)) {
+		fail("$&band", "Requires 2 arguments");
+	}
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10); list = list->next;
+	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	return mklist(mkstr(str("%ld", a1 & a2)), NULL);
+}
+
+PRIM(bxor) {
+	int64_t a1, a2;
+	a1 = a2 = 0;
+	if ((list == NULL) || (list->next == NULL)) {
+		fail("$&bxor", "Requires 2 arguments");
+	}
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10); list = list->next;
+	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	return mklist(mkstr(str("%ld", a1 ^ a2)), NULL);
+}
+
+PRIM(bor) {
+	int64_t a1, a2;
+	a1 = a2 = 0;
+	if ((list == NULL) || (list->next == NULL)) {
+		fail("$&bor", "Requires 2 arguments");
+	}
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10); list = list->next;
+	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	return mklist(mkstr(str("%ld", a1 | a2)), NULL);
+}
+
+PRIM(bnot) {
+	int64_t a1;
+	a1 = 0;
+	if (list == NULL) {
+		fail("$&bnot", "Requires an argument");
+	}
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	return mklist(mkstr(str("%ld", ~a1)), NULL);
+}
+
 PRIM(count) {
 	return mklist(mkstr(str("%d", length(list))), NULL);
 }
@@ -367,6 +413,10 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(mul);
 	X(div);
 	X(mod);
+	X(band);
+	X(bxor);
+	X(bnot);
+	X(bor);
 	X(setnoexport);
 	X(vars);
 	X(internals);

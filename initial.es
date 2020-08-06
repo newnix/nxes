@@ -81,6 +81,10 @@ fn-sum    = $&sum
 fn-mul    = $&mul
 fn-div    = $&div
 fn-mod    = $&mod
+fn-band   = $&band
+fn-bxor   = $&bxor
+fn-bnot   = $&bnot
+fn-bor    = $&bor
 
 fn-%read	= $&read
 
