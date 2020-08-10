@@ -11,19 +11,25 @@
  * hashing
  */
 
+/*
+ * TODO: Examine potential alternatives to this hashing function
+ * as this may be needlessly slow, there are potential gains to be
+ * made by replacing the hash function with a faster alternative
+ */
 /* strhash2 -- the (probably too slow) haahr hash function */
 static unsigned long strhash2(const char *str1, const char *str2) {
 
 #define	ADVANCE() { \
-		if ((c = *s++) == '\0') \
-			if (str2 == NULL) \
+		if ((c = *s++) == '\0') {\
+			if (str2 == NULL) {\
 				break; \
-			else { \
+			} else { \
 				s = (unsigned char *) str2; \
 				str2 = NULL; \
 				if ((c = *s++) == '\0') \
 					break; \
 			} \
+		}\
 	}
 
 	int c;
@@ -131,11 +137,12 @@ static Dict *put(Dict *dict, char *name, void *value) {
 
 	n = strhash(name);
 	mask = dict->size - 1;
-	for (; (ap = &dict->table[n & mask])->name != DEAD; n++)
+	for (; (ap = &dict->table[n & mask])->name != DEAD; n++) {
 		if (ap->name == NULL) {
 			--dict->remain;
 			break;
 		}
+	}
 
 	ap->name = name;
 	ap->value = value;
@@ -150,10 +157,13 @@ static void rm(Dict *dict, Assoc *ap) {
 	ap->value = NULL;
 	n = ap - dict->table;
 	mask = dict->size - 1;
-	for (n++; (ap = &dict->table[n & mask])->name == DEAD; n++)
+	for (n++; (ap = &dict->table[n & mask])->name == DEAD; n++) {
+		/* XXX: This loop is only called for its side effects */
 		;
-	if (ap->name != NULL)
+	}
+	if (ap->name != NULL) {
 		return;
+	}
 	for (n--; (ap = &dict->table[n & mask])->name == DEAD; n--) {
 		ap->name = NULL;
 		++dict->remain;
@@ -172,20 +182,23 @@ extern Dict *mkdict(void) {
 
 extern void *dictget(Dict *dict, const char *name) {
 	Assoc *ap = get(dict, name);
-	if (ap == NULL)
+	if (ap == NULL) {
 		return NULL;
+	}
 	return ap->value;
 }
 
 extern Dict *dictput(Dict *dict, char *name, void *value) {
 	Assoc *ap = get(dict, name);
-	if (value != NULL)
-		if (ap == NULL)
+	if (value != NULL) {
+		if (ap == NULL) {
 			dict = put(dict, name, value);
-		else
+		} else {
 			ap->value = value;
-	else if (ap != NULL)
+		}
+	} else if (ap != NULL) {
 		rm(dict, ap);
+	}
 	return dict;
 }
 
@@ -195,18 +208,22 @@ extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg
 	Ref(void *, argp, arg);
 	for (i = 0; i < dict->size; i++) {
 		Assoc *ap = &dict->table[i];
-		if (ap->name != NULL && ap->name != DEAD)
+		if (ap->name != NULL && ap->name != DEAD) {
 			(*proc)(argp, ap->name, ap->value);
+		}
 	}
 	RefEnd2(argp, dict);
 }
 
+/* TODO: Concatenate names before passing to strhash() */
 /* dictget2 -- look up the catenation of two names (such a hack!) */
 extern void *dictget2(Dict *dict, const char *name1, const char *name2) {
 	Assoc *ap;
 	unsigned long n = strhash2(name1, name2), mask = dict->size - 1;
-	for (; (ap = &dict->table[n & mask])->name != NULL; n++)
-		if (ap->name != DEAD && streq2(ap->name, name1, name2))
+	for (; (ap = &dict->table[n & mask])->name != NULL; n++) {
+		if (ap->name != DEAD && streq2(ap->name, name1, name2)) {
 			return ap->value;
+		}
+	}
 	return NULL;
 }

@@ -9,10 +9,6 @@ Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
 #endif
 
-/* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
-/* extern int getopt (int argc, char **argv, const char *optstring); */
-/* #endif */
-
 extern int optind;
 extern char *optarg;
 
@@ -24,10 +20,11 @@ extern char **environ;
 static void checkfd(int fd, OpenKind r) {
 	int new;
 	new = dup(fd);
-	if (new != -1)
+	if (new != -1) {
 		close(new);
-	else if (errno == EBADF && (new = eopen("/dev/null", r)) != -1)
+	} else if (errno == EBADF && (new = eopen("/dev/null", r)) != -1) {
 		mvfd(new, fd);
+	}
 }
 
 /* initpath -- set $path based on the configuration default */
@@ -49,22 +46,25 @@ static void initpid(void) {
 	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
 }
 
-/* runesrc -- run the user's profile, if it exists */
-static void runesrc(void) {
-	char *esrc = str("%L/.esrc", varlookup("home", NULL), "\001");
-	int fd = eopen(esrc, oOpen);
+/* loadprofile -- run the user's profile, if it exists */
+static void loadprofile(void) {
+	char *profile = str("%L/.nxesrc", varlookup("home", NULL), "\001");
+	int fd = eopen(profile, oOpen);
 	if (fd != -1) {
 		ExceptionHandler
-			runfd(fd, esrc, 0);
+			runfd(fd, profile, 0);
 		CatchException (e)
-			if (termeq(e->term, "exit"))
+			if (termeq(e->term, "exit")) {
 				exit(exitstatus(e->next));
-			else if (termeq(e->term, "error"))
+			}
+			else if (termeq(e->term, "error")) {
 				eprint("%L\n",
 				       e->next == NULL ? NULL : e->next->next,
 				       " ");
-			else if (!issilentsignal(e))
+			}
+			else if (!issilentsignal(e)) {
 				eprint("uncaught exception: %L\n", e, " ");
+			}
 			return;
 		EndExceptionHandler
 	}
@@ -95,7 +95,7 @@ static noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 #endif
 	);
-	exit(1);
+	exit(0);
 }
 
 
@@ -125,10 +125,11 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxvnpodsc:?GIL")) != EOF)
+	while ((c = getopt(argc, argv, "ehilxvnpodsc:?GIL")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
+		case 'h': usage();
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
 		case 'v':	runflags |= run_echoinput;	break;
@@ -174,6 +175,7 @@ getopt_done:
 	ac = argc;
 	av = argv;
 
+	/* XXX: This is a giant macro invocation from es.h */
 	ExceptionHandler
 		roothandler = &_localhandler;	/* unhygeinic */
 
@@ -190,7 +192,7 @@ getopt_done:
 		initenv(environ, protected);
 	
 		if (loginshell)
-			runesrc();
+			loadprofile();
 	
 		if (cmd == NULL && !cmd_stdin && optind < ac) {
 			int fd;
@@ -210,6 +212,7 @@ getopt_done:
 			return exitstatus(runstring(cmd, NULL, runflags));
 		return exitstatus(runfd(0, "stdin", runflags));
 
+	/* XXX: Another rather large macro */
 	CatchException (e)
 
 		if (termeq(e->term, "exit"))
@@ -222,5 +225,6 @@ getopt_done:
 			eprint("uncaught exception: %L\n", e, " ");
 		return 1;
 
+	/* XXX: Expands to a closing brace */
 	EndExceptionHandler
 }

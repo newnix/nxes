@@ -15,27 +15,23 @@
  * the fundamental es data structures.
  */
 
-typedef struct Tree Tree;
 typedef struct Term Term;
-typedef struct List List;
-typedef struct Binding Binding;
-typedef struct Closure Closure;
 
-struct List {
+typedef struct List {
 	Term *term;
-	List *next;
-};
+	struct List *next;
+} List;
 
-struct Binding {
+typedef struct Binding {
 	char *name;
 	List *defn;
-	Binding *next;
-};
+	struct Binding *next;
+} Binding;
 
-struct Closure {
+typedef struct Closure {
 	Binding	*binding;
-	Tree *tree;
-};
+	struct Tree *tree;
+} Closure;
 
 
 /*
@@ -48,25 +44,24 @@ typedef enum {
 	nRedir, nPipe		/* only appear during construction */
 } NodeKind;
 
-struct Tree {
+typedef struct Tree {
 	NodeKind kind;
 	union {
-		Tree *p;
+		struct Tree *p;
 		char *s;
 		int i;
 	} u[2];
-};
+} Tree;
 
 
 /*
  * miscellaneous data structures
  */
 
-typedef struct StrList StrList;
-struct StrList {
+typedef struct StrList {
 	char *str;
-	StrList *next;
-};
+	struct StrList *next;
+} StrList;
 
 typedef struct {
 	int alloclen, count;
@@ -380,6 +375,10 @@ extern Boolean gcisblocked();			/* is collection disabled? */
  * garbage collector tags
  */
 
+/* 
+ * XXX: Cannot combine into single statement without
+ * modifying usage in macro expansions
+ */
 typedef struct Root Root;
 struct Root {
 	void **p;
@@ -394,6 +393,10 @@ extern Root *rootlist;
 #define	refassert(e)	NOP
 #endif
 
+/* 
+ * TODO: Look at these expansions, 
+ * consider ways in which they could be reduced/eliminated
+ */
 #define	Ref(t, v, init) \
 	if (0) ; else { \
 		t v = init; \

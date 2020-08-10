@@ -46,16 +46,22 @@ static Tree *revtree(Tree *tree) {
 	return prev;
 }
 
-typedef struct Chain Chain;
-struct Chain {
+typedef struct Chain {
 	Closure *closure;
-	Chain *next;
-};
+	struct Chain *next;
+} Chain;
+
+/* Internal initialization of the chain */
 static Chain *chain = NULL;
 
 static Binding *extract(Tree *tree, Binding *bindings) {
 	assert(gcisblocked());
 
+	/* 
+	 * Tree layout:
+	 * Nodekind kind;
+	 * union { Tree *p; char *s; int i; } u[2];
+	 */
 	for (; tree != NULL; tree = tree->u[1].p) {
 		Tree *defn = tree->u[0].p;
 		assert(tree->kind == nList);

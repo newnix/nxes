@@ -16,8 +16,9 @@ PRIM(echo) {
 		if (termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;
-		} else if (termeq(list->term, "--"))
+		} else if (termeq(list->term, "--")) {
 			list = list->next;
+		}
 	print("%L%s", list, " ", eol);
 	return true;
 }
@@ -59,6 +60,7 @@ PRIM(div) {
 		}
 		return mklist(mkstr(str("%ld", quot)), NULL);
 	} else {
+		/* XXX: Warns that there's no return statement here, may need refactoring */
 		fail("$&div", "Expected at least 2 integer arguments");
 	}
 }

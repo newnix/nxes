@@ -6,17 +6,6 @@
 #endif
 
 /*
- * type qualifiers
- */
-
-#if !USE_VOLATILE
-# ifndef volatile
-#  define volatile
-# endif
-#endif
-
-
-/*
  * protect the rest of es source from the dance of the includes
  */
 
@@ -85,11 +74,11 @@ extern Dirent *readdir(DIR *);
 #include <sys/wait.h>
 
 /* stdlib */
-#if __GNUC__
-typedef volatile void noreturn;
-#else
+/* 
+ * XXX: May not actually be necessary or useful
+ * Don't use GNU C 
+ */
 typedef void noreturn;
-#endif
 
 #if STDC_HEADERS
 # include <stdlib.h>
