@@ -82,8 +82,29 @@ $ ./es
 ; echo <={$&version}
 nxes version 0.0-alpha0 20200804
 ```
-***
+---
 
 Consult the manual page (`roff` formatted) "es.1" for complete details.
 
 Please read through README.orig to see the original text, especially as this is under construction.
+
+---
+
+### Goals
+Some goals for the future of this fork (in no particular order):
+1. Modernize codebase (Drop obsolete hacks, attempt to make future maintenance easier)
+2. Add primitives to facilitate use as a glue language or midway point between POSIX `sh` and "real" languages like Racket/C/Python, etc.
+3. Work on making `nxes` tail recursive, this is mentioned in the original TODO (#2)
+4. Add some basic history manipulation commands such as `!!` and `!-2$` in GNU `bash` to aid in productivity
+5. Allow subshells to inherit closures (#1 in original TODO)
+6. Potentially expose `%parse` in such a way as to create a simple macro system
+7. Simplify and streamline build process
+8. Look at moving away from Yacc/Bison for writing the lexer/parser
+9. Allow for nested lists, in turn allowing for trees and other derived data structures
+10. Look into creating a `printf(1)` builtin for more complex printing needs than just `$&echo`
+
+Some non-goals:
+1. Become a strict, functional programming language
+2. Become a lazy, functional programming language
+3. Rewrite in Rust or other language (maybe some day, but this is not a goal)
+4. Become feature compatible with GNU `bash` (or really any other shell, some features are nice, but let's keep things small)
