@@ -2,6 +2,9 @@
 This is a fork of the public domain `es(1)` shell, the original, from 1997 can be fetched from [here](ftp://ftp.sys.toronto.edu/pub/es)
 as [es-0.9-beta1.tar.gz](ftp://ftp.sys.toronto.edu/pub/es/es-0.9-beta1.tar.gz).
 
+Can be pronounced as an initialism same as shell like `csh`, `ksh`, `zsh`, etc. ("en ecks ee ess") or 
+as "nexus".
+
 ### License
 See the LICENSE file for full details, but this code is made available under the 0BSD license.
 For all intents and purposes, this code remains in the public domain, in the same spirit as
