@@ -1,16 +1,18 @@
 #!/usr/bin/env es
+# vim: ft=nxes
 ## Simple es configuration script
 LANG=(en_US.UTF-8)
 TERM=(xterm-256color)
 path=(/sbin /bin /usr/sbin /usr/bin /usr/local/sbin /usr/local/bin $home^/bin $home^/bin/c)
 editors = (nvim kak vim vis ed)
 
+## TODO Improve comments
 ## Check for nvim and set it as the editor of choice
 fn geteditor {
 	for (e = $editors) {
 		catch @ {
 			## Exception handler, no else clause needed
-			{if {eq $1 return}
+			{if {eq $1 return} # 'return' is implemented as an exception, so we need to check the exception type
 				{$1 $2}}
 		} {
 			{%seq
@@ -21,14 +23,38 @@ fn geteditor {
 	}
 }
 
+## Simple function to print the result of its arguments
+## this reduces the need of typing `echo <={...}` during interactive use
+fn print {
+	echo <={$*}
+}
+
 ## Settor function to automatically set EDITOR and VISUAL
 ## to whatever the value of $editor is
 set-editor = @ {
-	local (set-EDITOR=)
-		EDITOR = $*
-	local (set-VISUAL=)
-		VISUAL = $*
-	result = $*
+	{local (set-EDITOR=) EDITOR = $*}
+	{local (set-VISUAL=) VISUAL = $*}
+	{result $*}
+}
+
+## Replace character in string
+fn replace original replacement separator { 
+	return <= {%flatten $replacement <= {
+		%split $separator $original
+	}}
+}
+
+## Utility function to get current TTY in a history-friendly manner
+fn histtty { 
+	local (ht= <={%split \n <={%backquote / tty}})
+		{return <= {%flatten / $ht(2) $ht(3)}}
+}
+
+## Settor function to create a per-session history file
+set-TTY = @ {
+	{local (set-history=) history = $home^/.history.^<={replace $* . /}}
+	{local (set-GPG_TTY=) GPG_TTY = $*}
+	{result $*}
 }
 
 ## Make reloading the config easier
@@ -42,6 +68,8 @@ fn vim {
 }
 
 ## Create a '++' pseudo-operator, mutates state internally
+## Unfortunately due to the ubiquity of getopt(3) style argument parsing
+## adding a corresponding '--' pseudo-operator is not practical.
 fn ++ i {
 	## The argument 'i' is meant to be a variable reference,
 	## used like so:
@@ -79,3 +107,4 @@ fn primitives {
 
 ## Automatically set editor related variables
 editor =<={geteditor}
+TTY =/dev/^<={histtty}
