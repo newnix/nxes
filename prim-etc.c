@@ -16,9 +16,9 @@ PRIM(echo) {
 		if (termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;
-		} else if (termeq(list->term, "--")) {
+		} else { if (termeq(list->term, "--")) {
 			list = list->next;
-		}
+		}}
 	print("%L%s", list, " ", eol);
 	return true;
 }
@@ -35,6 +35,29 @@ PRIM(sum) {
 	int64_t sum = 0;
 	for (; list != NULL; list = list->next) {
 		sum += (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	}
+	return mklist(mkstr(str("%ld", sum)), NULL);
+}
+
+/* 
+ * This function requires special treatment of the first argument, as
+ * the first argument being '-1' will result in an evaluation of 
+ * `0 - -1` with a resulting value of 1.
+ */
+PRIM(sub) {
+	int64_t sum, i = 0;
+
+	if (list != NULL) {
+		i = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		if (i < 0) {
+			sum = i;
+		} else {
+			sum -= i;
+		}
+		list = list->next;
+		for (; list != NULL; list = list->next) {
+			sum -= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		}
 	}
 	return mklist(mkstr(str("%ld", sum)), NULL);
 }
@@ -412,6 +435,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(batchloop);
 	X(collect);
 	X(home);
+	X(sub);
 	X(sum);
 	X(mul);
 	X(div);

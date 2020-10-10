@@ -2,7 +2,6 @@
 # vim: ft=nxes
 ## Simple es configuration script
 LANG=(en_US.UTF-8)
-TERM=(xterm-256color)
 path=(/sbin /bin /usr/sbin /usr/bin /usr/local/sbin /usr/local/bin $home^/bin $home^/bin/c)
 editors = (nvim kak vim vis ed)
 

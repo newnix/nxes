@@ -77,6 +77,7 @@ fn-result	= $&result
 fn-throw	= $&throw
 fn-umask	= $&umask
 fn-wait		= $&wait
+fn-sub		= $&sub
 fn-sum    = $&sum
 fn-mul    = $&mul
 fn-div    = $&div

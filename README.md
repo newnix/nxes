@@ -1,6 +1,7 @@
 # nxes(1) - Exile Heavy Industries Extensible Shell
-This is a fork of the public domain `es(1)` shell, the original, from 1997 can be fetched from [here](ftp://ftp.sys.toronto.edu/pub/es)
-as [es-0.9-beta1.tar.gz](ftp://ftp.sys.toronto.edu/pub/es/es-0.9-beta1.tar.gz).
+This is a fork of the public domain `es(1)` shell, the original, from 1997 can be fetched from one of the following locations:
+	* ftp://ftp.sys.toronto.edu/pub/es/es-0.9-beta1.tar.gz
+	* ftp://ftp.sys.utoronto.ca/pub/es/es-0.9-beta1.tar.gz
 
 Can be pronounced as an initialism same as shell like `csh`, `ksh`, `zsh`, etc. ("en ecks ee ess") or 
 as "nexus".
@@ -105,6 +106,7 @@ Some goals for the future of this fork (in no particular order):
 8. Look at moving away from Yacc/Bison for writing the lexer/parser
 9. Allow for nested lists, in turn allowing for trees and other derived data structures
 10. Look into creating a `printf(1)` builtin for more complex printing needs than just `$&echo`
+11. Consider changing variable/function binding syntax using more LISP-like forms, this would free up `=` from being a special character, which should make flags requiring '=' (e.g. `clang -std=c99`) more ergonomic than with the current parsing grammar. (having to do `'='` or similar)
 
 Some non-goals:
 1. Become a strict, functional programming language
