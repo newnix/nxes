@@ -45,17 +45,11 @@ PRIM(sum) {
  * `0 - -1` with a resulting value of 1.
  */
 PRIM(sub) {
-	int64_t sum, i = 0;
+	int64_t sum = 0;
 
 	if (list != NULL) {
-		i = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
-		if (i < 0) {
-			sum = i;
-		} else {
-			sum -= i;
-		}
-		list = list->next;
-		for (; list != NULL; list = list->next) {
+		sum = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		for (list = list->next; list != NULL; list = list->next) {
 			sum -= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
 		}
 	}
