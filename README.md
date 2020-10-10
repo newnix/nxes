@@ -14,7 +14,7 @@ the initial (known) authors: Byron Rakitzis, Paul Haahr, and Soren Dayton.
 
 ## Enhancements
 So far, this version of `es(1)` has been extended with the following primitive operations:
-1. Integer addition/subtraction (`sum`)
+1. Integer addition/subtraction (`sum` & `sub`)
 2. Integer multiplication (`mul`)
 3. Integer division (`div`)
 4. Modulus operation (`mod`)
@@ -38,6 +38,10 @@ Note: Semicolon ('`;`') is the default prompt.
 # Subtraction
 ; echo <={sum -1 -2 -3}
 -6
+
+# Alternative subtraction
+; echo <={sub 10 20 30 -5
+-35
 
 # Multiplication
 ; echo <={mul 2 4 6}
@@ -72,6 +76,20 @@ Note: Semicolon ('`;`') is the default prompt.
 All of these operations work on signed 64-bit integers, there's not currently any bounds or
 sanity checking on the inputs, so use with care if you need such large values in your interactive
 shell scripts/sessions.
+
+### Additional examples
+Under the `examples/` directory are some files that should be of particular interest in both showcasing
+the capabilities of this shell as well as syntax highlighting for {n,}vi{,m}. 
+
+	* examples/esrc.haahr
+		- Paul Haahr's annotated startup configuration, included primarily for historical reasons,
+		  as many of the functions used won't apply to the overwhelming majority of potential users.
+	
+	* examples/esrc.newnix
+		- My personal, evolving startup configuration. I'll try to keep it well annotated to make it even easier to follow along
+	
+	* examples/nxes.vim
+		- Vim syntax file, should be installed to `~/.config/vim/syntax/nxes.vim` or a similar location, use `set ft=nxes` to activate
 
 ## Installation
 The installation process should be relatively straightforward, though I've had some issues with undefined types
