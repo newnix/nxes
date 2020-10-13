@@ -40,7 +40,7 @@ Note: Semicolon ('`;`') is the default prompt.
 -6
 
 # Alternative subtraction
-; echo <={sub 10 20 30 -5
+; echo <={sub 10 20 30 -5}
 -35
 
 # Multiplication
