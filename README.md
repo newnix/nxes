@@ -105,6 +105,13 @@ $ ./es
 ; echo <={$&version}
 nxes version 0.0-alpha0 20200804
 ```
+
+I've been able to verify successful builds including expected behaviour when linking against readline on the following platforms:
+
+	* OpenBSD 6.7
+	* Void Linux (musl libc)
+	* HardenedBSD 12.1
+
 ---
 
 Consult the manual page (`roff` formatted) "es.1" for complete details.
