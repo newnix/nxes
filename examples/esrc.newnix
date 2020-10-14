@@ -2,7 +2,7 @@
 # vim: ft=nxes
 ## Simple es configuration script
 LANG=(en_US.UTF-8)
-path=(/sbin /bin /usr/sbin /usr/bin /usr/local/sbin /usr/local/bin $home^/bin $home^/bin/c)
+path=(/sbin /bin /usr/sbin /usr/bin /usr/games /usr/local/sbin /usr/local/bin $home^/bin $home^/bin/c)
 editors = (nvim kak vim vis ed)
 
 ## TODO Improve comments
@@ -58,12 +58,42 @@ set-TTY = @ {
 
 ## Make reloading the config easier
 fn reload {
-	. $home^/.esrc
+	. ~^<={real-user}^/.esrc
+}
+
+## Detect operation in escalated environments as via sudo(8)/doas(8)
+## TODO: Consider expansion to other tools like pfexec(8) from Illumos
+fn escalated? {
+	if {%or {eq $#DOAS_USER 0} {eq $#SUDO_USER 0}
+		} { true
+		} { false
+	}
+}
+
+## Extract the actual user running the privileged session
+fn real-user {
+	if {escalated?} {
+		if {eq $#SUDO_USER 1} {
+			result = $SUDO_USER
+		} {if {eq $#DOAS_USER 1} {
+			result = $DOAS_USER
+		}} {
+			## Not actually escalated, just use $USER
+			result = $USER
+		}
+	}
 }
 
 ## Everything is vim
 fn vim {
-	$editor $*
+	if {escalated?} {
+		## Since I actually do use {n,}vim most of the time, ensure that my ~/.vimrc is loaded
+		## even when running an escalated session that may clobber the value of $HOME or $USER
+		$editor -u ~^<={real-user}/.vimrc $*
+	} {
+		## Operate normally if not an escalated session
+		$editor $*
+	}
 }
 
 ## Create a '++' pseudo-operator, mutates state internally
