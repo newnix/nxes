@@ -64,7 +64,7 @@ fn reload {
 ## Detect operation in escalated environments as via sudo(8)/doas(8)
 ## TODO: Consider expansion to other tools like pfexec(8) from Illumos
 fn escalated? {
-	if {%or {eq $#DOAS_USER 0} {eq $#SUDO_USER 0}
+	if {%or {eq $#DOAS_USER 1} {eq $#SUDO_USER 1}
 		} { true
 		} { false
 	}
@@ -89,7 +89,7 @@ fn vim {
 	if {escalated?} {
 		## Since I actually do use {n,}vim most of the time, ensure that my ~/.vimrc is loaded
 		## even when running an escalated session that may clobber the value of $HOME or $USER
-		$editor -u ~^<={real-user}/.vimrc $*
+		$editor -u ~^<={real-user}^/.vimrc $*
 	} {
 		## Operate normally if not an escalated session
 		$editor $*
