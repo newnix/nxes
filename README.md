@@ -1,8 +1,8 @@
 # nxes(1) - Exile Heavy Industries Extensible Shell
 This is a fork of the public domain `es(1)` shell, the original, from 1997 can be fetched from one of the following locations:
 
-	* ftp://ftp.sys.toronto.edu/pub/es/es-0.9-beta1.tar.gz
-	* ftp://ftp.sys.utoronto.ca/pub/es/es-0.9-beta1.tar.gz
+  * ftp://ftp.sys.toronto.edu/pub/es/es-0.9-beta1.tar.gz
+  * ftp://ftp.sys.utoronto.ca/pub/es/es-0.9-beta1.tar.gz
 
 Can be pronounced as an initialism same as shell like `csh`, `ksh`, `zsh`, etc. ("en ecks ee ess") or 
 as "nexus".
@@ -81,15 +81,15 @@ shell scripts/sessions.
 Under the `examples/` directory are some files that should be of particular interest in both showcasing
 the capabilities of this shell as well as syntax highlighting for {n,}vi{,m}. 
 
-	* examples/esrc.haahr
-		- Paul Haahr's annotated startup configuration, included primarily for historical reasons,
-		  as many of the functions used won't apply to the overwhelming majority of potential users.
-	
-	* examples/esrc.newnix
-		- My personal, evolving startup configuration. I'll try to keep it well annotated to make it even easier to follow along
-	
-	* examples/nxes.vim
-		- Vim syntax file, should be installed to `~/.config/vim/syntax/nxes.vim` or a similar location, use `set ft=nxes` to activate
+  * examples/esrc.haahr
+    - Paul Haahr's annotated startup configuration, included primarily for historical reasons,
+      as many of the functions used won't apply to the overwhelming majority of potential users.
+  
+  * examples/esrc.newnix
+    - My personal, evolving startup configuration. I'll try to keep it well annotated to make it even easier to follow along
+  
+  * examples/nxes.vim
+    - Vim syntax file, should be installed to `~/.config/vim/syntax/nxes.vim` or a similar location, use `set ft=nxes` to activate
 
 ## Installation
 The installation process should be relatively straightforward, though I've had some issues with undefined types
@@ -99,8 +99,9 @@ no such issue has appeared. Any C compiler should work, but I have not had time 
 My process was as follows:
 
 ```sh
-$ CC=clang LD=ld.lld ./configure
+$ CC=clang LD=ld.lld ./configure --with-readline
 $ make YACC=byacc ADDCFLAGS="-D_DEFAULT_SOURCE -D_POSIX_SOURCE=200809L -std=c99"
+# Of course, run 'sudo make install' to install the compiled binary and manual page to whatever PREFIX is set to
 $ ./es
 ; echo <={$&version}
 nxes version 0.0-alpha0 20200804
@@ -108,9 +109,9 @@ nxes version 0.0-alpha0 20200804
 
 I've been able to verify successful builds including expected behaviour when linking against readline on the following platforms:
 
-	* OpenBSD 6.7
-	* Void Linux (musl libc)
-	* HardenedBSD 12.1
+  * OpenBSD 6.7
+  * Void Linux (musl libc)
+  * HardenedBSD 12.1
 
 ---
 
@@ -133,6 +134,7 @@ Some goals for the future of this fork (in no particular order):
 9. Allow for nested lists, in turn allowing for trees and other derived data structures
 10. Look into creating a `printf(1)` builtin for more complex printing needs than just `$&echo`
 11. Consider changing variable/function binding syntax using more LISP-like forms, this would free up `=` from being a special character, which should make flags requiring '=' (e.g. `clang -std=c99`) more ergonomic than with the current parsing grammar. (having to do `'='` or similar)
+12. Flesh out job control mechanism, support exists for creating new process groups and background execution, but no means to switch from background to foreground currently exists
 
 Some non-goals:
 1. Become a strict, functional programming language
