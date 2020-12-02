@@ -12,13 +12,16 @@ PRIM(result) {
 
 PRIM(echo) {
 	const char *eol = "\n";
-	if (list != NULL)
+	if (list != NULL) {
 		if (termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;
-		} else { if (termeq(list->term, "--")) {
-			list = list->next;
-		}}
+		} else {
+		       	if (termeq(list->term, "--")) {
+				list = list->next;
+			}
+		}
+	}
 	print("%L%s", list, " ", eol);
 	return true;
 }
@@ -70,16 +73,14 @@ PRIM(mul) {
  */
 PRIM(div) {
 	int64_t quot = 0;
-	if ((list != NULL) && (list->next != NULL)) {
-		quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
-		for (list = list->next; list != NULL; list = list->next) {
-			quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
-		}
-		return mklist(mkstr(str("%ld", quot)), NULL);
-	} else {
-		/* XXX: Warns that there's no return statement here, may need refactoring */
+	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&div", "Expected at least 2 integer arguments");
 	}
+	quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	for (list = list->next; list != NULL; list = list->next) {
+		quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	}
+	return mklist(mkstr(str("%ld", quot)), NULL);
 }
 
 /* 
