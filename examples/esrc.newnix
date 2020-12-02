@@ -58,8 +58,17 @@ set-TTY = @ {
 
 ## Make reloading the config easier
 fn reload {
-	. ~^<={real-user}^/.esrc
+	. <={%home <={real-user}}^/.esrc
 }
+
+## NOTE: Several of these functions are relying on environmental variables,
+## I'm well aware that these cannot be trusted, however tools like `id(1)`
+## are unable to report the RUID (or more accurately, the UID of the user
+## that spawned the elevated process) when using commands like `sudo -sE`
+## or `doas -s`. That said, given the intended usage of these functions,
+## if you have a potentially hostile environment, you likely have much
+## larger issues than a simple inquiry function not being able to accurately
+## report your original login name.
 
 ## Detect operation in escalated environments as via sudo(8)/doas(8)
 ## TODO: Consider expansion to other tools like pfexec(8) from Illumos
@@ -77,9 +86,43 @@ fn real-user {
 			result = $SUDO_USER
 		} {if {eq $#DOAS_USER 1} {
 			result = $DOAS_USER
-		}} {
-			## Not actually escalated, just use $USER
-			result = $USER
+		}}
+	} {
+		## Not actually escalated, just use $USER
+		result = $USER
+	}
+}
+
+## Simple interactive inquiry function 
+fn iam? {
+	local (realid = <={real-user}) {
+		if {eq $realid $USER} {
+			echo You are $realid
+		} {
+			echo You are $realid acting as $USER
+		}
+	}
+}
+
+## Allow interactive queries of the login name
+fn ami login {
+	local (logname =`{id -run}) {
+		if {eq $logname $login} {
+			echo Yes
+		} {
+			echo No, you are $USER
+		}
+	}
+}
+
+## Non-interactive user querying, for use in scripting
+## allows usage like `if {iam root} { foo }`
+fn iam login {
+	local (current = $USER) {
+		if {eq $login $current} {
+			true
+		} {
+			false
 		}
 	}
 }
@@ -89,7 +132,7 @@ fn vim {
 	if {escalated?} {
 		## Since I actually do use {n,}vim most of the time, ensure that my ~/.vimrc is loaded
 		## even when running an escalated session that may clobber the value of $HOME or $USER
-		$editor -u ~^<={real-user}^/.vimrc $*
+		$editor -u <={%home <={real-user}}^/.vimrc $*
 	} {
 		## Operate normally if not an escalated session
 		$editor $*
