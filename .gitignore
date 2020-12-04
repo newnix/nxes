@@ -1,0 +1,23 @@
+# Build artifacts
+*.o
+
+# Make artifacts
+Makefile
+
+# Configuration artifacts
+config.cache
+config.h
+config.log
+config.status
+
+# Statically built artifacts
+es
+esdump
+y.output
+
+# Statically built C files
+initial.c
+sigmsgs.c
+token.h
+y.tab.c
+y.tab.h

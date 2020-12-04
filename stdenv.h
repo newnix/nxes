@@ -71,7 +71,9 @@ extern Dirent *readdir(DIR *);
 #include <fcntl.h>
 #endif
 
+#if !defined(__unix__)
 #include <sys/wait.h>
+#endif
 
 /* stdlib */
 /* 

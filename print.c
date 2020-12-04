@@ -87,10 +87,10 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 		return;
 
 	flags = format->flags;
+	// Short gets default promoted to 'int' with va_arg, so
+	// no need to check FMT_short.
 	if (flags & FMT_long)
 		n = va_arg(format->args, long);
-	else if (flags & FMT_short)
-		n = va_arg(format->args, short);
 	else
 		n = va_arg(format->args, int);
 

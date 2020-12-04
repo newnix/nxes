@@ -4,6 +4,7 @@
 
 #include "es.h"
 #include "prim.h"
+#include <sys/stat.h>
 
 #ifdef HAVE_SETRLIMIT
 # define BSD_LIMITS 1
@@ -17,6 +18,8 @@
 #if !HAVE_WAIT3
 #include <sys/times.h>
 #include <limits.h>
+#else
+#include <time.h>
 #endif
 #endif
 
