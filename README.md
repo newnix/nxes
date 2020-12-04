@@ -4,8 +4,8 @@ This is a fork of the public domain `es(1)` shell, the original, from 1997 can b
   * ftp://ftp.sys.toronto.edu/pub/es/es-0.9-beta1.tar.gz
   * ftp://ftp.sys.utoronto.ca/pub/es/es-0.9-beta1.tar.gz
 
-Can be pronounced as an initialism same as shell like `csh`, `ksh`, `zsh`, etc. ("en ecks ee ess") or 
-as "nexus".
+The name can be pronounced as an initialism same as shells like `csh`, `ksh`, `zsh`, etc.
+("en ecks ee ess") or as "nexus".
 
 ### License
 See the LICENSE file for full details, but this code is made available under the 0BSD license.
@@ -113,6 +113,8 @@ I've been able to verify successful builds including expected behaviour when lin
   * Void Linux (musl libc)
   * HardenedBSD 12.1
 
+More detailed information on tested and working builds can be found under BUILD.md
+
 ---
 
 Consult the manual page (`roff` formatted) "es.1" for complete details.
@@ -135,6 +137,8 @@ Some goals for the future of this fork (in no particular order):
 10. Look into creating a `printf(1)` builtin for more complex printing needs than just `$&echo`
 11. Consider changing variable/function binding syntax using more LISP-like forms, this would free up `=` from being a special character, which should make flags requiring '=' (e.g. `clang -std=c99`) more ergonomic than with the current parsing grammar. (having to do `'='` or similar)
 12. Flesh out job control mechanism, support exists for creating new process groups and background execution, but no means to switch from background to foreground currently exists
+13. Remove the dependency on GNU readline or libedit for common features like tab completion, 
+making them optional for those who have a custom `.inputrc` that I have no intent to support.
 
 Some non-goals:
 1. Become a strict, functional programming language

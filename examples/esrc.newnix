@@ -4,6 +4,8 @@
 LANG=(en_US.UTF-8)
 path=(/sbin /bin /usr/sbin /usr/bin /usr/games /usr/local/sbin /usr/local/bin $home^/bin $home^/bin/c)
 editors = (nvim kak vim vis ed)
+dirstack = ()
+noexport = dirstack result
 
 ## TODO Improve comments
 ## Check for nvim and set it as the editor of choice
@@ -175,6 +177,62 @@ fn primitives {
 			++ pi
 		}
 	}
+}
+
+## Stack management functions
+## By necessity, these mutate their stack argument
+fn push stack value {
+	if {%and {eq $$stack ()} {%not {eq $value ()}}} {
+		## Create the stack
+		$stack = $value
+	} {
+		if {%not {eq $value} ()} {
+			$stack = $$stack $value
+		}
+	}
+}
+
+fn pop stack {
+	if {%not {eq $$stack ()}} {
+		## Stack is non-empty
+		local (_s = $$stack) {
+			$stack = $_s(... <={sum <={%count $_s} -1})
+		}
+	}
+}
+
+## Iplement pushd/popd/dirs
+fn pushd target {
+	## We appear to have a valid target
+	if {eq $dirstack () } {
+		push dirstack <={%backquote <={%flatten '' $ifs} {pwd}}
+	}
+	{%seq
+		{%and 
+			{push dirstack <={%backquote <={%flatten '' $ifs} {stat -f "%R" $target}}}
+			## Pop the entry if chdir(2) fails
+			{%or {cd $target} {pop dirstack}}
+		}
+	}
+}
+
+fn popd {
+	if {%not {eq <={%count $dirstack} 0}} {
+		local (dc =<={%count $dirstack}) {
+			{%seq
+				{%and {cd $dirstack(<={sum $dc -1})}
+					{pop dirstack}
+				}
+			}
+		}
+	} {
+		## Basically a no-op
+		:
+	}
+}
+
+fn dirs {
+	echo $dirstack
 }
 
 ## Automatically set editor related variables

@@ -32,9 +32,9 @@ PRIM(echo) {
  * after tackling the tail call recursion issue mentioned in "TODO"
  */
 PRIM(sum) {
-	int64_t sum = 0;
+	ssize_t sum = 0;
 	for (; list != NULL; list = list->next) {
-		sum += (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		sum += (ssize_t)strtol(getstr(list->term), (char **)NULL, 10);
 	}
 	return mklist(mkstr(str("%ld", sum)), NULL);
 }
@@ -45,12 +45,12 @@ PRIM(sum) {
  * `0 - -1` with a resulting value of 1.
  */
 PRIM(sub) {
-	int64_t sum = 0;
+	ssize_t sum = 0;
 
 	if (list != NULL) {
-		sum = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		sum = (ssize_t)strtol(getstr(list->term), (char **)NULL, 10);
 		for (list = list->next; list != NULL; list = list->next) {
-			sum -= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+			sum -= (ssize_t)strtol(getstr(list->term), (char **)NULL, 10);
 		}
 	}
 	return mklist(mkstr(str("%ld", sum)), NULL);
