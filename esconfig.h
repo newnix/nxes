@@ -104,7 +104,7 @@
  *		will be checked at run-time.  this is only useful if you're
  *		modifying es source, and makes the binary much larger.
  *
- *	REISER_CPP
+ *	REISER_CPP (DELETED - Should not be needed anymore)
  *		true if es is being compiled with a reiser-style preprocessor.
  *		if you have an ansi preprocessor, use it and turn this off.
  *
@@ -194,24 +194,6 @@
 # define READLINE 1
 #endif
 
-/* NeXT defaults */
-
-#if NeXT
-#ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T	1
-#endif
-#endif	/* NeXT */
-
-
-/* Irix defaults */
-
-#if sgi
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
-#endif
-#endif	/* sgi */
-
-
 /* SunOS 4.x defaults */
 
 #if sun && !SOLARIS
@@ -219,49 +201,6 @@
 #define	INITIAL_PATH		"/usr/ucb", "/usr/bin", ""
 #endif
 #endif	/* sun */
-
-
-/* HP/UX 9.0.1 -- from rsalz@osf.org (Rich $alz) and haahr*/
-
-#if HPUX
-#define _INCLUDE_POSIX_SOURCE	1
-#define _INCLUDE_XOPEN_SOURCE	1
-#define _INCLUDE_HPUX_SOURCE	1
-#endif
-
-
-/* SCO Xenix -- from steveo@world.std.com (Steven W Orr) for SCO-ODT-1.1 */
-
-#if sco
-#ifndef	USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T	1
-#endif
-#endif	/* sco */
-
-
-/* OSF/1 -- this is taken from the DEC Alpha */
-
-#if OSF1
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/bin", ""
-#endif
-#endif	/* OSF1 */
-
-/* OSF/1 on HP snakes -- from John Robert LoVerso <loverso@osf.org> */
-
-#ifdef __hp_osf
-#define __NO_FP_VARARGS		/* avoid bug compiling print.c */
-#endif
-
-
-/* DEC Ultrix 4.2 -- from render@massive.uccs.edu (Hal Render) */
-
-#if ultrix
-#ifndef USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T	1
-#endif
-#endif /* ultrix */
-
 
 /* 386BSD -- from dbarker@mulga.awadi.com.AU (Dave Barker) */
 
@@ -313,7 +252,7 @@
 #endif
 
 #ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/ucb", "/usr/bin", "/bin", ""
+#define	INITIAL_PATH		"/sbin", "/bin", "/usr/bin", "/usr/sbin", ""
 #endif
 
 #ifndef	JOB_PROTECT
@@ -330,10 +269,6 @@
 
 #ifndef	REF_ASSERTIONS
 #define	REF_ASSERTIONS		0
-#endif
-
-#ifndef	REISER_CPP
-#define	REISER_CPP		0
 #endif
 
 #ifndef	SHOW_DOT_FILES

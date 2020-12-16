@@ -137,13 +137,9 @@ extern void *qsort(
 #define	NOP			do ; while (0)
 #endif
 
-#if REISER_CPP
-#define CONCAT(a,b)	a/**/b
-#define STRING(s)	"s"
-#else
+/* XXX: Convenience macros, may be deleted in future versions */
 #define CONCAT(a,b)	a ## b
 #define STRING(s)	#s
-#endif
 
 
 /*

@@ -119,9 +119,7 @@ extern Boolean queueheredoc(Tree *t) {
 	assert(hereq == NULL || hereq->marker->kind == nList);
 	assert(t->kind == nList);
 	assert(t->CAR->kind == nWord);
-#if !REISER_CPP
-	assert(streq(t->CAR->u[0].s, "%heredoc"));
-#endif
+	assert(streq(t->CAR->u[0].s, "%heredoc")); /* Used to be gated behind !REISER_CPP */
 	t->CAR->u[0].s = "%here";
 	assert(t->CDR->kind == nList);
 	eof = t->CDR->CDR;
