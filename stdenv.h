@@ -1,5 +1,15 @@
 /* stdenv.h -- set up an environment we can use */
 
+/* Don't use GNU extensions */
+#if defined(__GNUC__)
+#define __STRICT_ANSI__ 1
+#endif 
+
+/* Don't compile as C++ */
+#if defined(__cplusplus)
+#error "Compile as C99 or later, not C++"
+#endif
+
 #include "esconfig.h"
 #ifdef HAVE_SYS_CDEFS_H
 # include <sys/cdefs.h>
@@ -54,14 +64,14 @@ typedef struct dirent Dirent;
 #else
 #include <sys/dir.h>
 typedef struct direct Dirent;
-#endif
+#endif /* HAVE_DIRENT_H */
 /* prototypes for XXXdir functions. comment out if necessary */
 #if !HPUX
 extern DIR *opendir(const char *);
 extern Dirent *readdir(DIR *);
 /*extern int closedir(DIR *);*/
-#endif
-#endif
+#endif /* !HPUX */
+#endif /* REQUIRE_DIRENT */
 
 #if REQUIRE_PWD
 #include <pwd.h>
@@ -71,7 +81,9 @@ extern Dirent *readdir(DIR *);
 #include <fcntl.h>
 #endif
 
+#if !defined(__linux__)
 #include <sys/wait.h>
+#endif
 
 /* stdlib */
 /* 
@@ -256,16 +268,8 @@ extern int getgroups(int, int *);
 #ifdef linux
 #include "unistd.h"
 #define setpgrp(a, b)	setpgid(a, b)
-#endif
-
-#if sgi
-#define	setpgrp(a, b)	BSDsetpgrp(a,b)
-#endif
-
-#if HPUX
-#define	setpgrp(a, b)	setpgrp()
-#endif
-#endif
+#endif /* linux */
+#endif /* HAVE_SETSID */
 
 #if !HAVE_LSTAT
 #define	lstat	stat

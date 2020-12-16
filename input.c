@@ -43,8 +43,8 @@ extern char *rl_completer_quote_characters;
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
 static char *(*realgetenv)(const char *) = stdgetenv;
-#endif
-#endif
+#endif /* ABUSED_GETENV */
+#endif /* READLINE */
 
 
 /*
@@ -62,11 +62,6 @@ static char *error = NULL;
 
 /* yyerror -- yacc error entry point */
 extern void yyerror(char *s) {
-#if sgi
-	/* this is so that trip.es works */
-	if (streq(s, "Syntax error"))
-		s = "syntax error";
-#endif
 	if (error == NULL)	/* first error is generally the most informative */
 		error = locate(input, s);
 }
@@ -217,6 +212,10 @@ static char *callreadline(char *prompt) {
 	return r;
 }
 
+/* 
+ * TODO: on HardenedBSD this function appears to be unused,
+ * ensure it's still needed
+ */
 /* getenv -- fake version of getenv for readline (or other libraries) */
 static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);

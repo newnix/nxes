@@ -82,16 +82,14 @@ static List
 static List
 *prim_div(List *list, Binding *binding, int evalflags) {
 	int64_t quot = 0;
-	if ((list != NULL) && (list->next != NULL)) {
-		quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
-		for (list = list->next; list != NULL; list = list->next) {
-			quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
-		}
-		return mklist(mkstr(str("%ld", quot)), NULL);
-	} else {
-		/* XXX: Warns that there's no return statement here, may need refactoring */
+	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&div", "Expected at least 2 integer arguments");
 	}
+	quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	for (list = list->next; list != NULL; list = list->next) {
+		quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	}
+	return mklist(mkstr(str("%ld", quot)), NULL);
 }
 
 /* 

@@ -4,6 +4,8 @@
 
 #include "es.h"
 #include "prim.h"
+/* TODO: Double check necessity here */
+#include <sys/stat.h>
 
 #ifdef HAVE_SETRLIMIT
 # define BSD_LIMITS 1
@@ -17,8 +19,10 @@
 #if !HAVE_WAIT3
 #include <sys/times.h>
 #include <limits.h>
-#endif
-#endif
+#else
+#include <time.h>
+#endif /* !HAVE_WAIT3 */
+#endif /* BSD_LIMITS || BUILTIN_TIME */
 
 static List
 *prim_newpgrp(List *list, Binding *binding, int evalflags) {
@@ -93,7 +97,7 @@ static List
 		mask = strtol(s, &t, 8);
 		if ((t != NULL && *t != '\0') || ((unsigned) mask) > 07777)
 			fail("$&umask", "bad umask: %s", s);
-		if (umask(mask) == -1)
+		if (umask(mask) == (mode_t)(~0))
 			fail("$&umask", "umask %04o: %s", mask, esstrerror(errno));
 		return true;
 	}
