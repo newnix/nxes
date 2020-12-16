@@ -196,7 +196,7 @@ fn pop stack {
 	if {%not {eq $$stack ()}} {
 		## Stack is non-empty
 		local (_s = $$stack) {
-			$stack = $_s(... <={sum <={%count $_s} -1})
+			$stack = $_s(... <={sub <={%count $_s} 1})
 		}
 	}
 }
