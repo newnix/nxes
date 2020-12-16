@@ -1,4 +1,4 @@
-/* open.c -- to insulate <fcntl.h> from the rest of es ($Revision: 1.1.1.1 $) */
+/* open.c -- to insulate <fcntl.h> from the rest of es */
 
 #define	REQUIRE_FCNTL	1
 

@@ -1,4 +1,4 @@
-/* dict.c -- hash-table based dictionaries ($Revision: 1.1.1.1 $) */
+/* dict.c -- hash-table based dictionaries */
 
 #include "es.h"
 #include "gc.h"

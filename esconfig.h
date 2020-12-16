@@ -1,4 +1,4 @@
-/* config.h -- es(1) configuration parameters ($Revision: 1.1.1.1 $) */
+/* config.h -- es(1) configuration parameters */
 
 /*
  * Compile time options
@@ -179,8 +179,9 @@
 
 
 /*
- * platform specific options
- *	please send new configurations to haahr@adobe.com and byron@netapp.com
+ * XXX: Much of this should be able to be safely eliminated,
+ * if any of it needs to remain or additional configuration data
+ * needs to be added, submit a PR with the necessary changes
  */
 
 #include "config.h"

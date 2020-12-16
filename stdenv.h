@@ -1,4 +1,4 @@
-/* stdenv.h -- set up an environment we can use ($Revision: 1.3 $) */
+/* stdenv.h -- set up an environment we can use */
 
 #include "esconfig.h"
 #ifdef HAVE_SYS_CDEFS_H

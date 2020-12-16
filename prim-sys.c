@@ -1,4 +1,4 @@
-/* prim-sys.c -- system call primitives ($Revision: 1.2 $) */
+/* prim-sys.c -- system call primitives */
 
 #define	REQUIRE_IOCTL	1
 
@@ -20,7 +20,8 @@
 #endif
 #endif
 
-PRIM(newpgrp) {
+static List
+*prim_newpgrp(List *list, Binding *binding, int evalflags) {
 	int pid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
@@ -40,7 +41,8 @@ PRIM(newpgrp) {
 	return true;
 }
 
-PRIM(background) {
+static List
+*prim_background(List *list, Binding *binding, int evalflags) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
@@ -53,7 +55,8 @@ PRIM(background) {
 	return mklist(mkstr(str("%d", pid)), NULL);
 }
 
-PRIM(fork) {
+static List
+*prim_fork(List *list, Binding *binding, int evalflags) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
@@ -64,7 +67,8 @@ PRIM(fork) {
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
 
-PRIM(run) {
+static List
+*prim_run(List *list, Binding *binding, int evalflags) {
 	char *file;
 	if (list == NULL)
 		fail("$&run", "usage: %%run file argv0 argv1 ...");
@@ -74,7 +78,8 @@ PRIM(run) {
 	RefReturn(lp);
 }
 
-PRIM(umask) {
+static List
+*prim_umask(List *list, Binding *binding, int evalflags) {
 	if (list == NULL) {
 		int mask = umask(0);
 		umask(mask);
@@ -96,7 +101,8 @@ PRIM(umask) {
 	NOTREACHED;
 }
 
-PRIM(cd) {
+static List
+*prim_cd(List *list, Binding *binding, int evalflags) {
 	char *dir;
 	if (list == NULL || list->next != NULL)
 		fail("$&cd", "usage: $&cd directory");
@@ -106,7 +112,8 @@ PRIM(cd) {
 	return true;
 }
 
-PRIM(setsignals) {
+static List
+*prim_setsignals(List *list, Binding *binding, int evalflags) {
 	int i;
 	Sigeffect effects[NSIG];
 	for (i = 0; i < NSIG; i++)
@@ -250,7 +257,8 @@ static LIMIT_T parselimit(const Limit *limit, char *s) {
 	return lim;
 }
 
-PRIM(limit) {
+static List
+*prim_limit(List *list, Binding *binding, int evalflags) {
 	const Limit *lim = limits;
 	Boolean hard = FALSE;
 	Ref(List *, lp, list);
@@ -294,7 +302,8 @@ PRIM(limit) {
 #endif	/* BSD_LIMITS */
 
 #if BUILTIN_TIME
-PRIM(time) {
+static List
+*prim_time(List *list, Binding *binding, int evalflags) {
 
 #if HAVE_WAIT3
 
@@ -375,7 +384,8 @@ PRIM(time) {
 #endif	/* BUILTIN_TIME */
 
 #if !KERNEL_POUNDBANG
-PRIM(execfailure) {
+static List
+*prim_execfailure(List *list, Binding *binding, int evalflags) {
 	int fd, len, argc;
 	char header[1024], *args[10], *s, *end, *file;
 
@@ -439,21 +449,21 @@ PRIM(execfailure) {
 #endif /* !KERNEL_POUNDBANG */
 
 extern Dict *initprims_sys(Dict *primdict) {
-	X(newpgrp);
-	X(background);
-	X(umask);
-	X(cd);
-	X(fork);
-	X(run);
-	X(setsignals);
+	primdict = dictput(primdict, STRING(newpgrp), (void *)prim_newpgrp);
+	primdict = dictput(primdict, STRING(background), (void *)prim_background);
+	primdict = dictput(primdict, STRING(umask), (void *)prim_umask);
+	primdict = dictput(primdict, STRING(cd), (void *)prim_cd);
+	primdict = dictput(primdict, STRING(fork), (void *)prim_fork);
+	primdict = dictput(primdict, STRING(run), (void *)prim_run);
+	primdict = dictput(primdict, STRING(setsignals), (void *)prim_setsignals);
 #if BSD_LIMITS
-	X(limit);
+	primdict = dictput(primdict, STRING(limit), (void *)prim_limit);
 #endif
 #if BUILTIN_TIME
-	X(time);
+	primdict = dictput(primdict, STRING(time), (void *)prim_time);
 #endif
 #if !KERNEL_POUNDBANG
-	X(execfailure);
+	primdict = dictput(primdict, STRING(execfailure), (void *)prim_execfailure);
 #endif /* !KERNEL_POUNDBANG */
 	return primdict;
 }

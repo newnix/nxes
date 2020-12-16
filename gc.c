@@ -1,4 +1,4 @@
-/* gc.c -- copying garbage collector for es ($Revision: 1.2 $) */
+/* gc.c -- copying garbage collector for es */
 
 #define	GARBAGE_COLLECTOR	1	/* for es.h */
 

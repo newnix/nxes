@@ -1,4 +1,4 @@
-/* var.c -- es variables ($Revision: 1.1.1.1 $) */
+/* var.c -- es variables */
 
 #include "es.h"
 #include "gc.h"

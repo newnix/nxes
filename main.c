@@ -1,4 +1,4 @@
-/* main.c -- initialization for es ($Revision: 1.3 $) */
+/* main.c -- initialization for es */
 
 #include "es.h"
 

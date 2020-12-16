@@ -1,4 +1,4 @@
-/* proc.c -- process control system calls ($Revision: 1.2 $) */
+/* proc.c -- process control system calls */
 
 #include "es.h"
 
@@ -163,10 +163,11 @@ top:
 	fail("es:ewait", "wait: %d is not a child of this shell", pid);
 	NOTREACHED;
 }
-
+/* XXX: This almost certainly should not be so far down the file */
 #include "prim.h"
 
-PRIM(apids) {
+static List
+*prim_apids(List *list, Binding *binding, int evalflags) {
 	Proc *p;
 	Ref(List *, lp, NULL);
 	for (p = proclist; p != NULL; p = p->next)
@@ -178,7 +179,8 @@ PRIM(apids) {
 	RefReturn(lp);
 }
 
-PRIM(wait) {
+static List
+*prim_wait(List *list, Binding *binding, int evalflags) {
 	int pid;
 	if (list == NULL)
 		pid = 0;
@@ -196,7 +198,7 @@ PRIM(wait) {
 }
 
 extern Dict *initprims_proc(Dict *primdict) {
-	X(apids);
-	X(wait);
+	primdict = dictput(primdict, STRING(apids), (void *)prim_apids);
+	primdict = dictput(primdict, STRING(wait), (void *)prim_wait);
 	return primdict;
 }

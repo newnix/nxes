@@ -1,4 +1,4 @@
-/* es.h -- definitions for higher order shell ($Revision: 1.2 $) */
+/* es.h -- definitions for higher order shell */
 
 #include "config.h"
 #include "stdenv.h"
@@ -10,6 +10,13 @@
 #define ENV_SEPARATOR	'\001'		/* control-A */
 #define	ENV_ESCAPE	'\002'		/* control-B */
 
+/* Setting this one macro should allow greater runtime introspection */
+#if DEBUG_ALL
+#define GCDEBUG 1
+#define GCVERBOSE 1
+#define GCINFO 1
+#define LISPTREES 1
+#endif
 
 /*
  * the fundamental es data structures.

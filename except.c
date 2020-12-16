@@ -1,4 +1,4 @@
-/* except.c -- exception mechanism ($Revision: 1.1.1.1 $) */
+/* except.c -- exception mechanism */
 
 #include "es.h"
 #include "print.h"

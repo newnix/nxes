@@ -1,9 +1,10 @@
-/* prim-ctl.c -- control flow primitives ($Revision: 1.1.1.1 $) */
+/* prim-ctl.c -- control flow primitives */
 
 #include "es.h"
 #include "prim.h"
 
-PRIM(seq) {
+static List
+*prim_seq(List *list, Binding *binding, int evalflags) {
 	Ref(List *, result, true);
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next)
@@ -12,7 +13,8 @@ PRIM(seq) {
 	RefReturn(result);
 }
 
-PRIM(if) {
+static List
+*prim_if(List *list, Binding *binding, int evalflags) {
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next) {
 		List *cond = eval1(lp->term, evalflags & (lp->next == NULL ? eval_inchild : 0));
@@ -31,7 +33,8 @@ PRIM(if) {
 	return true;
 }
 
-PRIM(forever) {
+static List
+*prim_forever(List *list, Binding *binding, int evalflags) {
 	Ref(List *, body, list);
 	for (;;)
 		list = eval(body, NULL, evalflags & eval_exitonfalse);
@@ -39,14 +42,16 @@ PRIM(forever) {
 	return list;
 }
 
-PRIM(throw) {
+static List
+*prim_throw(List *list, Binding *binding, int evalflags) {
 	if (list == NULL)
 		fail("$&throw", "usage: throw exception [args ...]");
 	throw(list);
 	NOTREACHED;
 }
 
-PRIM(catch) {
+static List
+*prim_catch(List *list, Binding *binding, int evalflags) {
 	Atomic retry;
 
 	if (list == NULL)
@@ -90,10 +95,10 @@ PRIM(catch) {
 }
 
 extern Dict *initprims_controlflow(Dict *primdict) {
-	X(seq);
-	X(if);
-	X(throw);
-	X(forever);
-	X(catch);
+	primdict = dictput(primdict, STRING(seq), (void *)prim_seq);
+	primdict = dictput(primdict, STRING(if), (void *)prim_if);
+	primdict = dictput(primdict, STRING(throw), (void *)prim_throw);
+	primdict = dictput(primdict, STRING(forever), (void *)prim_forever);
+	primdict = dictput(primdict, STRING(catch), (void *)prim_catch);
 	return primdict;
 }

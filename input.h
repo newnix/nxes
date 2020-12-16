@@ -1,4 +1,4 @@
-/* input.h -- definitions for es lexical analyzer ($Revision: 1.1.1.1 $) */
+/* input.h -- definitions for es lexical analyzer */
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 

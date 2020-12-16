@@ -1,4 +1,4 @@
-/* prim.c -- primitives and primitive dispatching ($Revision: 1.1.1.1 $) */
+/* prim.c -- primitives and primitive dispatching */
 
 #include "es.h"
 #include "prim.h"
@@ -13,7 +13,8 @@ extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
 	return (*p)(list, binding, evalflags);
 }
 
-PRIM(primitives) {
+static List
+*prim_primitives(List *list, Binding *binding, int evalflags) {
 	static List *primlist = NULL;
 	if (primlist == NULL) {
 		globalroot(&primlist);
@@ -34,6 +35,10 @@ extern void initprims(void) {
 	prims = initprims_proc(prims);
 	prims = initprims_access(prims);
 
-#define	primdict prims
-	X(primitives);
+	/*
+	 * TODO: This is forbidden by ISO C, so 
+	 * once I'm more familiar with the codebase,
+	 * this needs to be corrected
+	 */
+	(prims = dictput(prims, STRING(primitives), (void *)prim_primitives));
 }

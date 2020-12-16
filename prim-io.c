@@ -1,4 +1,4 @@
-/* prim-io.c -- input/output and redirection primitives ($Revision: 1.2 $) */
+/* prim-io.c -- input/output and redirection primitives */
 
 #include "es.h"
 #include "gc.h"
@@ -85,7 +85,8 @@ REDIR(openfile) {
 	RefReturn(lp);
 }
 
-PRIM(openfile) {
+static List
+*prim_openfile(List *list, Binding *binding, int evalflags) {
 	List *lp;
 	caller = "$&openfile";
 	if (length(list) != 4)
@@ -109,7 +110,8 @@ REDIR(dup) {
 	RefReturn(lp);
 }
 
-PRIM(dup) {
+static List
+*prim_dup(List *list, Binding *binding, int evalflags) {
 	caller = "$&dup";
 	if (length(list) != 3)
 		argcount("%dup newfd oldfd cmd");
@@ -121,7 +123,8 @@ REDIR(close) {
 	return list;
 }
 
-PRIM(close) {
+static List
+*prim_close(List *list, Binding *binding, int evalflags) {
 	caller = "$&close";
 	if (length(list) != 2)
 		argcount("%close fd cmd");
@@ -178,14 +181,16 @@ REDIR(here) {
 	return tail;
 }
 
-PRIM(here) {
+static List
+*prim_here(List *list, Binding *binding, int evalflags) {
 	caller = "$&here";
 	if (length(list) < 2)
 		argcount("%here fd [word ...] cmd");
 	return redir(redir_here, list, evalflags);
 }
 
-PRIM(pipe) {
+static List
+*prim_pipe(List *list, Binding *binding, int evalflags) {
 	int n, infd, inpipe;
 	static int *pids = NULL, pidmax = 0;
 
@@ -245,7 +250,8 @@ PRIM(pipe) {
 }
 
 #if HAVE_DEV_FD
-PRIM(readfrom) {
+static List
+*prim_readfrom(List *list, Binding *binding, int evalflags) {
 	int pid, p[2], status;
 	Push push;
 
@@ -285,7 +291,8 @@ PRIM(readfrom) {
 	RefReturn(lp);
 }
 
-PRIM(writeto) {
+static List
+*prim_writeto(List *list, Binding *binding, int evalflags) {
 	int pid, p[2], status;
 	Push push;
 	Handler h;
@@ -348,7 +355,8 @@ restart:
 	return endsplit();
 }
 
-PRIM(backquote) {
+static List
+*prim_backquote(List *list, Binding *binding, int evalflags) {
 	int pid, p[2], status;
 	
 	caller = "$&backquote";
@@ -379,7 +387,8 @@ PRIM(backquote) {
 	return list;
 }
 
-PRIM(newfd) {
+static List
+*prim_newfd(List *list, Binding *binding, int evalflags) {
 	if (list != NULL)
 		fail("$&newfd", "usage: $&newfd");
 	return mklist(mkstr(str("%d", newfd())), NULL);
@@ -398,7 +407,8 @@ static int read1(int fd) {
 	return nread == 0 ? EOF : buf;
 }
 
-PRIM(read) {
+static List
+*prim_read(List *list, Binding *binding, int evalflags) {
 	int c;
 	int fd = fdmap(0);
 
@@ -422,17 +432,17 @@ PRIM(read) {
 }
 
 extern Dict *initprims_io(Dict *primdict) {
-	X(openfile);
-	X(close);
-	X(dup);
-	X(pipe);
-	X(backquote);
-	X(newfd);
-	X(here);
+	primdict = dictput(primdict, STRING(openfile), (void *)prim_openfile);
+	primdict = dictput(primdict, STRING(close), (void *)prim_close);
+	primdict = dictput(primdict, STRING(dup), (void *)prim_dup);
+	primdict = dictput(primdict, STRING(pipe), (void *)prim_pipe);
+	primdict = dictput(primdict, STRING(backquote), (void *)prim_backquote);
+	primdict = dictput(primdict, STRING(newfd), (void *)prim_newfd);
+	primdict = dictput(primdict, STRING(here), (void *)prim_here);
 #if HAVE_DEV_FD
-	X(readfrom);
-	X(writeto);
+	primdict = dictput(primdict, STRING(readfrom), (void *)prim_readfrom);
+	primdict = dictput(primdict, STRING(writeto), (void *)prim_writeto);
 #endif
-	X(read);
+	primdict = dictput(primdict, STRING(read), (void *)prim_read);
 	return primdict;
 }

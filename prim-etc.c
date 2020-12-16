@@ -1,4 +1,4 @@
-/* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
+/* prim-etc.c -- miscellaneous primitives */
 
 #define	REQUIRE_PWD	1
 
@@ -6,19 +6,24 @@
 #include "es.h"
 #include "prim.h"
 
-PRIM(result) {
+static List
+*prim_result(List *list, Binding *binding, int evalflags) {
 	return list;
 }
 
-PRIM(echo) {
+static List
+*prim_echo(List *list, Binding *binding, int evalflags) {
 	const char *eol = "\n";
-	if (list != NULL)
+	if (list != NULL) {
 		if (termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;
-		} else { if (termeq(list->term, "--")) {
-			list = list->next;
-		}}
+		} else {
+			if (termeq(list->term, "--")) {
+				list = list->next;
+			}
+		}
+	}
 	print("%L%s", list, " ", eol);
 	return true;
 }
@@ -31,7 +36,8 @@ PRIM(echo) {
  * TODO: Consider rewriting to evaluate recursively, may need to wait until
  * after tackling the tail call recursion issue mentioned in "TODO"
  */
-PRIM(sum) {
+static List
+*prim_sum(List *list, Binding *binding, int evalflags) {
 	int64_t sum = 0;
 	for (; list != NULL; list = list->next) {
 		sum += (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
@@ -44,7 +50,8 @@ PRIM(sum) {
  * the first argument being '-1' will result in an evaluation of 
  * `0 - -1` with a resulting value of 1.
  */
-PRIM(sub) {
+static List
+*prim_sub(List *list, Binding *binding, int evalflags) {
 	int64_t sum = 0;
 
 	if (list != NULL) {
@@ -59,7 +66,8 @@ PRIM(sub) {
 	return mklist(mkstr(str("%ld", sum)), NULL);
 }
 
-PRIM(mul) {
+static List
+*prim_mul(List *list, Binding *binding, int evalflags) {
 	int64_t prod = 1;
 	for (; list != NULL; list = list->next) {
 		prod *= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
@@ -71,7 +79,8 @@ PRIM(mul) {
  * This operation requires some additional logic 
  * to ensure proper behaviour.
  */
-PRIM(div) {
+static List
+*prim_div(List *list, Binding *binding, int evalflags) {
 	int64_t quot = 0;
 	if ((list != NULL) && (list->next != NULL)) {
 		quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
@@ -89,7 +98,8 @@ PRIM(div) {
  * Modulus operation, can't think of a reason why it should
  * accept more than 2 arguments
  */
-PRIM(mod) {
+static List
+*prim_mod(List *list, Binding *binding, int evalflags) {
 	uint64_t mod = 0;
 	int64_t a1, a2;
 	if ((list != NULL) && (length(list) == 2)) {
@@ -104,7 +114,8 @@ PRIM(mod) {
 /*
  * Create bitwise primitives
  */
-PRIM(band) {
+static List
+*prim_band(List *list, Binding *binding, int evalflags) {
 	int64_t a1, a2;
 	a1 = a2 = 0;
 	if ((list == NULL) || (list->next == NULL)) {
@@ -115,7 +126,8 @@ PRIM(band) {
 	return mklist(mkstr(str("%ld", a1 & a2)), NULL);
 }
 
-PRIM(bxor) {
+static List
+*prim_bxor(List *list, Binding *binding, int evalflags) {
 	int64_t a1, a2;
 	a1 = a2 = 0;
 	if ((list == NULL) || (list->next == NULL)) {
@@ -126,7 +138,8 @@ PRIM(bxor) {
 	return mklist(mkstr(str("%ld", a1 ^ a2)), NULL);
 }
 
-PRIM(bor) {
+static List
+*prim_bor(List *list, Binding *binding, int evalflags) {
 	int64_t a1, a2;
 	a1 = a2 = 0;
 	if ((list == NULL) || (list->next == NULL)) {
@@ -137,7 +150,8 @@ PRIM(bor) {
 	return mklist(mkstr(str("%ld", a1 | a2)), NULL);
 }
 
-PRIM(bnot) {
+static List
+*prim_bnot(List *list, Binding *binding, int evalflags) {
 	int64_t a1;
 	a1 = 0;
 	if (list == NULL) {
@@ -147,25 +161,30 @@ PRIM(bnot) {
 	return mklist(mkstr(str("%ld", ~a1)), NULL);
 }
 
-PRIM(count) {
+static List
+*prim_count(List *list, Binding *binding, int evalflags) {
 	return mklist(mkstr(str("%d", length(list))), NULL);
 }
 
-PRIM(setnoexport) {
+static List
+*prim_setnoexport(List *list, Binding *binding, int evalflags) {
 	Ref(List *, lp, list);
 	setnoexport(lp);
 	RefReturn(lp);
 }
 
-PRIM(version) {
+static List
+*prim_version(List *list, Binding *binding, int evalflags) {
 	return mklist(mkstr((char *) version), NULL);
 }
 
-PRIM(exec) {
+static List
+*prim_exec(List *list, Binding *binding, int evalflags) {
 	return eval(list, NULL, evalflags | eval_inchild);
 }
 
-PRIM(dot) {
+static List
+*prim_dot(List *list, Binding *binding, int evalflags) {
 	int c, fd;
 	Push zero, star;
 	volatile int runflags = (evalflags & eval_inchild);
@@ -203,7 +222,8 @@ PRIM(dot) {
 	RefReturn(result);
 }
 
-PRIM(flatten) {
+static List
+*prim_flatten(List *list, Binding *binding, int evalflags) {
 	char *sep;
 	if (list == NULL)
 		fail("$&flatten", "usage: %%flatten separator [args ...]");
@@ -213,7 +233,13 @@ PRIM(flatten) {
 	RefReturn(lp);
 }
 
-PRIM(whatis) {
+/* 
+ * TODO: Since this apparently has duplicated logic, 
+ * see if there's a way to fold the operation into a singe,
+ * possibly inlined function.
+ */
+static List
+*prim_whatis(List *list, Binding *binding, int evalflags) {
 	/* the logic in here is duplicated in eval() */
 	if (list == NULL || list->next != NULL)
 		fail("$&whatis", "usage: $&whatis program");
@@ -239,7 +265,8 @@ PRIM(whatis) {
 	return list;
 }
 
-PRIM(split) {
+static List
+*prim_split(List *list, Binding *binding, int evalflags) {
 	char *sep;
 	if (list == NULL)
 		fail("$&split", "usage: %%split separator [args ...]");
@@ -249,7 +276,8 @@ PRIM(split) {
 	RefReturn(lp);
 }
 
-PRIM(fsplit) {
+static List
+*prim_fsplit(List *list, Binding *binding, int evalflags) {
 	char *sep;
 	if (list == NULL)
 		fail("$&fsplit", "usage: %%fsplit separator [args ...]");
@@ -259,7 +287,8 @@ PRIM(fsplit) {
 	RefReturn(lp);
 }
 
-PRIM(var) {
+static List
+*prim_var(List *list, Binding *binding, int evalflags) {
 	Term *term;
 	if (list == NULL)
 		return NULL;
@@ -273,7 +302,8 @@ PRIM(var) {
 	return list;
 }
 
-PRIM(sethistory) {
+static List
+*prim_sethistory(List *list, Binding *binding, int evalflags) {
 	if (list == NULL) {
 		sethistory(NULL);
 		return NULL;
@@ -283,7 +313,12 @@ PRIM(sethistory) {
 	RefReturn(lp);
 }
 
-PRIM(parse) {
+/*
+ * TODO: Look into exposing this as a means of allowing 
+ * meta-programming and creating a shell DSL when needed
+ */
+static List
+*prim_parse(List *list, Binding *binding, int evalflags) {
 	List *result;
 	Tree *tree;
 	Ref(char *, prompt1, NULL);
@@ -304,11 +339,17 @@ PRIM(parse) {
 	return result;
 }
 
-PRIM(exitonfalse) {
+/* 
+ * XXX: Is this function really necessary? It appears to 
+ * simply be adding a flag to eval()
+ */
+static List
+*prim_exitonfalse(List *list, Binding *binding, int evalflags) {
 	return eval(list, NULL, evalflags | eval_exitonfalse);
 }
 
-PRIM(batchloop) {
+static List
+*prim_batchloop(List *list, Binding *binding, int evalflags) {
 	Ref(List *, result, true);
 	Ref(List *, dispatch, NULL);
 
@@ -344,12 +385,14 @@ PRIM(batchloop) {
 	EndExceptionHandler
 }
 
-PRIM(collect) {
+static List
+*prim_collect(List *list, Binding *binding, int evalflags) {
 	gc();
 	return true;
 }
 
-PRIM(home) {
+static List
+*prim_home(List *list, Binding *binding, int evalflags) {
 	struct passwd *pw;
 	if (list == NULL)
 		return varlookup("home", NULL);
@@ -359,19 +402,23 @@ PRIM(home) {
 	return (pw == NULL) ? NULL : mklist(mkstr(gcdup(pw->pw_dir)), NULL);
 }
 
-PRIM(vars) {
+static List
+*prim_vars(List *list, Binding *binding, int evalflags) {
 	return listvars(FALSE);
 }
 
-PRIM(internals) {
+static List
+*prim_internals(List *list, Binding *binding, int evalflags) {
 	return listvars(TRUE);
 }
 
-PRIM(isinteractive) {
+static List
+*prim_isinteractive(List *list, Binding *binding, int evalflags) {
 	return isinteractive() ? true : false;
 }
 
-PRIM(noreturn) {
+static List
+*prim_noreturn(List *list, Binding *binding, int evalflags) {
 	if (list == NULL)
 		fail("$&noreturn", "usage: $&noreturn lambda args ...");
 	Ref(List *, lp, list);
@@ -385,7 +432,8 @@ PRIM(noreturn) {
 	RefReturn(lp);
 }
 
-PRIM(setmaxevaldepth) {
+static List
+*prim_setmaxevaldepth(List *list, Binding *binding, int evalflags) {
 	char *s;
 	long n;
 	if (list == NULL) {
@@ -405,7 +453,8 @@ PRIM(setmaxevaldepth) {
 }
 
 #if READLINE
-PRIM(resetterminal) {
+static List
+*prim_resetterminal(List *list, Binding *binding, int evalflags) {
 	resetterminal = TRUE;
 	return true;
 }
@@ -417,40 +466,40 @@ PRIM(resetterminal) {
  */
 
 extern Dict *initprims_etc(Dict *primdict) {
-	X(echo);
-	X(count);
-	X(version);
-	X(exec);
-	X(dot);
-	X(flatten);
-	X(whatis);
-	X(sethistory);
-	X(split);
-	X(fsplit);
-	X(var);
-	X(parse);
-	X(batchloop);
-	X(collect);
-	X(home);
-	X(sub);
-	X(sum);
-	X(mul);
-	X(div);
-	X(mod);
-	X(band);
-	X(bxor);
-	X(bnot);
-	X(bor);
-	X(setnoexport);
-	X(vars);
-	X(internals);
-	X(result);
-	X(isinteractive);
-	X(exitonfalse);
-	X(noreturn);
-	X(setmaxevaldepth);
+	primdict = dictput(primdict, STRING(echo), (void *)prim_echo);
+	primdict = dictput(primdict, STRING(count), (void *)prim_count);
+	primdict = dictput(primdict, STRING(version), (void *)prim_version);
+	primdict = dictput(primdict, STRING(exec), (void *)prim_exec);
+	primdict = dictput(primdict, STRING(dot), (void *)prim_dot);
+	primdict = dictput(primdict, STRING(flatten), (void *)prim_flatten);
+	primdict = dictput(primdict, STRING(whatis), (void *)prim_whatis);
+	primdict = dictput(primdict, STRING(sethistory), (void *)prim_sethistory);
+	primdict = dictput(primdict, STRING(split), (void *)prim_split);
+	primdict = dictput(primdict, STRING(fsplit), (void *)prim_fsplit);
+	primdict = dictput(primdict, STRING(var), (void *)prim_var);
+	primdict = dictput(primdict, STRING(parse), (void *)prim_parse);
+	primdict = dictput(primdict, STRING(batchloop), (void *)prim_batchloop);
+	primdict = dictput(primdict, STRING(collect), (void *)prim_collect);
+	primdict = dictput(primdict, STRING(home), (void *)prim_home);
+	primdict = dictput(primdict, STRING(sub), (void *)prim_sub);
+	primdict = dictput(primdict, STRING(sum), (void *)prim_sum);
+	primdict = dictput(primdict, STRING(mul), (void *)prim_mul);
+	primdict = dictput(primdict, STRING(div), (void *)prim_div);
+	primdict = dictput(primdict, STRING(mod), (void *)prim_mod);
+	primdict = dictput(primdict, STRING(band), (void *)prim_band);
+	primdict = dictput(primdict, STRING(bxor), (void *)prim_bxor);
+	primdict = dictput(primdict, STRING(bnot), (void *)prim_bnot);
+	primdict = dictput(primdict, STRING(bor), (void *)prim_bor);
+	primdict = dictput(primdict, STRING(setnoexport), (void *)prim_setnoexport);
+	primdict = dictput(primdict, STRING(vars), (void *)prim_vars);
+	primdict = dictput(primdict, STRING(internals), (void *)prim_internals);
+	primdict = dictput(primdict, STRING(result), (void *)prim_result);
+	primdict = dictput(primdict, STRING(isinteractive), (void *)prim_isinteractive);
+	primdict = dictput(primdict, STRING(exitonfalse), (void *)prim_exitonfalse);
+	primdict = dictput(primdict, STRING(noreturn), (void *)prim_noreturn);
+	primdict = dictput(primdict, STRING(setmaxevaldepth), (void *)prim_setmaxevaldepth);
 #if READLINE
-	X(resetterminal);
+	primdict = dictput(primdict, STRING(resetterminal), (void *)prim_resetterminal);
 #endif
 	return primdict;
 }

@@ -1,4 +1,4 @@
-/* access.c -- access testing and path searching ($Revision: 1.2 $) */
+/* access.c -- access testing and path searching */
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_PARAM	1
@@ -96,7 +96,8 @@ static char *pathcat(char *prefix, char *suffix) {
 	return pathbuf;
 }
 
-PRIM(access) {
+static List
+*prim_access(List *list, Binding *binding, int evalflags) {
 	int c, perm = 0, type = 0, estatus = ENOENT;
 	Boolean first = FALSE, exception = FALSE;
 	char *suffix = NULL;
@@ -171,7 +172,7 @@ PRIM(access) {
 }
 
 extern Dict *initprims_access(Dict *primdict) {
-	X(access);
+	primdict = dictput(primdict, STRING(access), (void *)prim_access);
 	return primdict;
 }
 

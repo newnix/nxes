@@ -1,4 +1,4 @@
-/* token.c -- lexical analyzer for es ($Revision: 1.1.1.1 $) */
+/* token.c -- lexical analyzer for es */
 
 #include "es.h"
 #include "input.h"

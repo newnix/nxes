@@ -1,4 +1,4 @@
-/* print.c -- formatted printing routines ($Revision: 1.1.1.1 $) */
+/* print.c -- formatted printing routines */
 
 #include "es.h"
 #include "print.h"
