@@ -73,7 +73,7 @@ static void loadprofile(void) {
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
-		"usage: es [-c command] [-silevxnpo] [file [args ...]]\n"
+		"usage: nxes [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"

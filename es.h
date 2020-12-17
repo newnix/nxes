@@ -22,6 +22,30 @@
  * the fundamental es data structures.
  */
 
+/* 
+ * NOTE: Results in a structure like so:
+List list {
+	Term *term {
+		char *str;
+		Closure *closure {
+			Binding *binding {
+				char *name;
+				List *defn;
+				Binding *next;
+			};
+			Tree *tree {
+				enum NodeKind;
+				union {
+					struct Tree *p;
+					char *s;
+					int i;
+				} u[2];
+			};
+		};
+	};
+};
+ */
+
 typedef struct Term Term;
 
 typedef struct List {

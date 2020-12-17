@@ -20,6 +20,7 @@ bindir	= @bindir@
 srcdir  = @srcdir@
 
 
+PROGNAME = nxes
 SHELL	= /bin/sh
 CC	= @CC@
 INSTALL	= @INSTALL@
@@ -48,14 +49,14 @@ GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
 SIGFILES = @SIGFILES@
 
-es	: ${OFILES} initial.o
-	${CC} -o es ${LDFLAGS} ${OFILES} initial.o ${LIBS}
+$(PROGNAME)	: ${OFILES} initial.o
+	${CC} -o ${@} ${LDFLAGS} ${OFILES} initial.o ${LIBS}
 
 esdump	: ${OFILES} dump.o
-	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
+	${CC} -o ${@} ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
 clean	:
-	rm -f es ${OFILES} ${GEN} dump.o initial.o
+	rm -f $(PROGNAME) ${OFILES} ${GEN} dump.o initial.o
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status
@@ -63,14 +64,14 @@ distclean:	clean
 MANIFEST:
 	find . -type f | sed s/..// > MANIFEST
 
-install : es
-	$(INSTALL) $(srcdir)/es $(bindir)
-	$(INSTALL) $(srcdir)/es.1 $(mandir)/man1
+install : $(PROGNAME) test
+	$(INSTALL) $(srcdir)/$(PROGNAME) $(bindir)
+	$(INSTALL) $(srcdir)/$(PROGNAME).1 $(mandir)/man1
 
 test	: trip
 
-trip	: es $(srcdir)/trip.es
-	./es < $(srcdir)/trip.es
+trip	: $(PROGNAME) $(srcdir)/trip.es
+	./$(PROGNAME) < $(srcdir)/trip.es
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
