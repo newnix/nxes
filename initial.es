@@ -1,4 +1,5 @@
-# initial.es -- set up initial interpreter state ($Revision: 1.1.1.1 $)
+# initial.es -- set up initial interpreter state
+# vim: ft=nxes
 
 
 #
@@ -86,6 +87,8 @@ fn-band   = $&band
 fn-bxor   = $&bxor
 fn-bnot   = $&bnot
 fn-bor    = $&bor
+fn-lt     = $&lessthan
+fn-gt     = $&greaterthan
 
 fn-%read	= $&read
 

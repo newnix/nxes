@@ -6,6 +6,15 @@
 #include "es.h"
 #include "prim.h"
 
+/* 
+ * TODO: Consider adding support for handling floating point values
+ * as well as integer values. This may require adding an actual type system
+ * to the shell, but that may be feasible with some boxing techniques.
+ * However, it would be beneficial to be able to handle more than just
+ * integer based operations to reduce the need for switching to a 
+ * more general-purpose language.
+ */
+
 static List
 *prim_result(List *list, Binding *binding, int evalflags) {
 	return list;
@@ -107,6 +116,37 @@ static List
 		mod = (uint64_t)(a1 % a2);
 	}
 	return mklist(mkstr(str("%ld", mod)), NULL);
+}
+
+/*
+ * Enable greater than/less than comparisons
+ * these return a bool, which is not the correct type
+ * FIXME: This is wrong, but appears to be idiomatic for the codebase
+ */
+static List
+*prim_greaterthan(List *list, Binding *binding, int evalflags) {
+	int64_t a, b;
+	a = b = 0;
+	if ((list == NULL) || (list->next == NULL)) {
+		fail("$&greaterthan", "Arity mismatch, requires 2 arguments");
+	}
+	a = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	list = list->next;
+	b = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	return((a > b) ? true : false);
+}
+
+static List
+*prim_lessthan(List *list, Binding *binding, int evalflags) {
+	int64_t a, b;
+	a = b = 0;
+	if ((list == NULL) || (list->next == NULL)) {
+		fail("$&lessthan", "Arity mismatch, requires 2 arguments");
+	}
+	a = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	list = list->next;
+	b = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	return((a < b) ? true : false);
 }
 
 /*
@@ -496,6 +536,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	primdict = dictput(primdict, STRING(exitonfalse), (void *)prim_exitonfalse);
 	primdict = dictput(primdict, STRING(noreturn), (void *)prim_noreturn);
 	primdict = dictput(primdict, STRING(setmaxevaldepth), (void *)prim_setmaxevaldepth);
+	primdict = dictput(primdict, STRING(greaterthan), (void *)prim_greaterthan);
+	primdict = dictput(primdict, STRING(lessthan), (void *)prim_lessthan);
 #if READLINE
 	primdict = dictput(primdict, STRING(resetterminal), (void *)prim_resetterminal);
 #endif
