@@ -82,7 +82,6 @@ AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h unistd.h memory.h stdar
 
 
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
 AC_TYPE_UID_T
 AC_TYPE_SIZE_T
 

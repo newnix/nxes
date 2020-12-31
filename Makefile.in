@@ -25,9 +25,19 @@ SHELL	= /bin/sh
 CC	= @CC@
 INSTALL	= @INSTALL@
 
+## Sanitizers to use, primarily for development/debugging purposes
+SANITIZERS = -fno-sanitize-trap=all -fsanitize=undefined
 
-CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -Qn -g3 -O2 -pipe -std=c99 -Wall -pedantic -fPIE -fPIC @CFLAGS@
-LDFLAGS	= $(ADDLDFLAGS) -Wl,-z,relro -Wl,-z,now @LDFLAGS@
+CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -Qn -g3 -O2 -pipe -std=c99\
+					-Wall -pedantic -fPIE -fPIC -fstack-protector-strong -fstack-protector-all\
+					-fstrict-enums -fstrict-return -fvisibility=hidden -flto\
+					${SANITIZERS}\
+					@CFLAGS@
+
+LDFLAGS	= $(ADDLDFLAGS) -Wl,-z,relro -Wl,-z,now -flto\
+					${SANITIZERS}\
+					@LDFLAGS@
+
 LIBS	= $(ADDLIBS) @LIBS@
 
 VPATH = $(srcdir)
@@ -49,6 +59,10 @@ GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
 SIGFILES = @SIGFILES@
 
+## Used to hijack the ports infrastructure for shells/es
+## TODO: This should be removed as the build process is refined
+es: $(PROGNAME)
+
 $(PROGNAME)	: ${OFILES} initial.o
 	${CC} -o ${@} ${LDFLAGS} ${OFILES} initial.o ${LIBS}
 
@@ -68,6 +82,7 @@ install : $(PROGNAME) test
 	$(INSTALL) $(srcdir)/$(PROGNAME) $(bindir)
 	$(INSTALL) $(srcdir)/$(PROGNAME).1 $(mandir)/man1
 
+## TODO: This should be expanded to a more comprehensive suite of tests
 test	: trip
 
 trip	: $(PROGNAME) $(srcdir)/trip.es
@@ -90,7 +105,6 @@ sigmsgs.c : mksignal $(SIGFILES)
 
 config.h  : config.h.in
 	./configure
-# for linux use:
 
 # --- dependencies ---
 

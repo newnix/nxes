@@ -128,6 +128,9 @@ static Dict *put(Dict *dict, char *name, void *value) {
 		Ref(char *, np, name);
 		Ref(void *, vp, value);
 		new = mkdict0(GROW(old->size));
+		/*
+		 * XXX: Appears to cause issues (SIGILL) when compiled with CFI
+		 */
 		dictforall(old, (void (*)(void *, char *, void *)) put, new);
 		dict = new;
 		name = np;
