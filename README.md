@@ -22,6 +22,7 @@ So far, this version of `es(1)` has been extended with the following primitive o
 6. Bitwise NOT (`bnot`) (NOTE: Unary operation)
 7. Bitwise XOR (`bxor`)
 8. Bitwise OR  (`bor`)
+9. Integer comparisons greater/less than (`gt`/`lt`)
 
 ### Examples
 The additional primitives do not print the results to `stdout`, instead they're returned much like
