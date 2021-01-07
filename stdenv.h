@@ -135,7 +135,7 @@ extern void *qsort(
  */
 
 #define	streq(s, t)		(strcmp(s, t) == 0)
-#define	strneq(s, t, n)		(strncmp(s, t, n) == 0)
+#define	strneq(s, t, n)		(memcmp(s, t, n) == 0)
 #define	hasprefix(s, p)		strneq(s, p, (sizeof p) - 1)
 #define	arraysize(a)		((int) (sizeof (a) / sizeof (*a)))
 #define	memzero(dest, count)	memset(dest, 0, count)

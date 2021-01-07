@@ -9,9 +9,6 @@ Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
 #endif
 
-extern int optind;
-extern char *optarg;
-
 /* extern int isatty(int fd); */
 extern char **environ;
 
@@ -71,7 +68,7 @@ static void loadprofile(void) {
 }
 
 /* usage -- print usage message and die */
-static noreturn usage(void) {
+static noreturn usage(unsigned int rc) {
 	eprint(
 		"usage: nxes [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"
@@ -95,7 +92,7 @@ static noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 #endif
 	);
-	exit(0);
+	exit(rc);
 }
 
 
@@ -127,9 +124,9 @@ int main(int argc, char **argv) {
 
 	while ((c = getopt(argc, argv, "ehilxvnpodsc:?GIL")) != EOF)
 		switch (c) {
-		case 'c':	cmd = optarg;			break;
+		case 'c':	cmd = optarg; break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
-		case 'h': usage();
+		case 'h': usage(0); /* Terminates */
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
 		case 'v':	runflags |= run_echoinput;	break;
@@ -149,7 +146,7 @@ int main(int argc, char **argv) {
 		case 'I':	gcinfo = TRUE;			break;
 #endif
 		default:
-			usage();
+			usage(1);
 		}
 
 getopt_done:

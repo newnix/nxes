@@ -435,7 +435,7 @@ fn %one {
 			if {~ $#* 0} {
 				result 'null filename in redirection'
 			} {
-				result 'too many files in redirection: ' $*
+				result 'too many files in redirection:' $*
 			}
 		}
 	}
