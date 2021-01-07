@@ -71,6 +71,12 @@ Note: Semicolon ('`;`') is the default prompt.
 ; echo <={bnot 0}
 -1
 
+# Integer Comparisons
+; if {lt 0 1} {echo true} {echo false}
+true
+
+; if {gt 0 1} {echo true} {echo false}
+false
 ```
 
 All of these operations work on signed 64-bit integers, there's not currently any bounds or
