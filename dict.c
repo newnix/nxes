@@ -42,6 +42,7 @@ static unsigned long strhash2(const char *str1, const char *str2) {
 		ADVANCE();
 		n ^= (c << 14) + (c << 7) + (c << 4) + c;
 		ADVANCE();
+		/* FIXME: This is apparently reliant on UB as reported by UBSAN */
 		n ^= (~c << 11) | ((c << 3) ^ (c >> 1));
 		ADVANCE();
 		n -= (c << 16) | (c << 9) | (c << 2) | (c & 3);
