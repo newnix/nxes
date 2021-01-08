@@ -60,7 +60,7 @@ set-TTY = @ {
 
 ## Make reloading the config easier
 fn reload {
-	. <={%home <={real-user}}^/.esrc
+	. <={%home <={real-user}}^/.nxesrc
 }
 
 ## NOTE: Several of these functions are relying on environmental variables,

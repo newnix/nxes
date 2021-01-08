@@ -387,71 +387,6 @@ static List
 }
 #endif	/* BUILTIN_TIME */
 
-#if !KERNEL_POUNDBANG
-static List
-*prim_execfailure(List *list, Binding *binding, int evalflags) {
-	int fd, len, argc;
-	char header[1024], *args[10], *s, *end, *file;
-
-	gcdisable();
-	if (list == NULL)
-		fail("$&execfailure", "usage: %%exec-failure name argv");
-
-	file = getstr(list->term);
-	fd = eopen(file, oOpen);
-	if (fd < 0) {
-		gcenable();
-		return NULL;
-	}
-	len = read(fd, header, sizeof header);
-	close(fd);
-	if (len <= 2 || header[0] != '#' || header[1] != '!') {
-		gcenable();
-		return NULL;
-	}
-
-	s = &header[2];
-	end = &header[len];
-	argc = 0;
-	while (argc < arraysize(args) - 1) {
-		int c;
-		while ((c = *s) == ' ' || c == '\t')
-			if (++s >= end) {
-				gcenable();
-				return NULL;
-			}
-		if (c == '\n' || c == '\r')
-			break;
-		args[argc++] = s;
-		do
-			if (++s >= end) {
-				gcenable();
-				return NULL;
-			}
-		while (s < end && (c = *s) != ' ' && c != '\t' && c != '\n' && c != '\r');
-		*s++ = '\0';
-		if (c == '\n' || c == '\r')
-			break;
-	}
-	if (argc == 0) {
-		gcenable();
-		return NULL;
-	}
-
-	list = list->next;
-	if (list != NULL)
-		list = list->next;
-	list = mklist(mkstr(file), list);
-	while (argc != 0)
-		list = mklist(mkstr(args[--argc]), list);
-
-	Ref(List *, lp, list);
-	gcenable();
-	lp = eval(lp, NULL, eval_inchild);
-	RefReturn(lp);
-}
-#endif /* !KERNEL_POUNDBANG */
-
 extern Dict *initprims_sys(Dict *primdict) {
 	primdict = dictput(primdict, STRING(newpgrp), (void *)prim_newpgrp);
 	primdict = dictput(primdict, STRING(background), (void *)prim_background);
@@ -466,8 +401,5 @@ extern Dict *initprims_sys(Dict *primdict) {
 #if BUILTIN_TIME
 	primdict = dictput(primdict, STRING(time), (void *)prim_time);
 #endif
-#if !KERNEL_POUNDBANG
-	primdict = dictput(primdict, STRING(execfailure), (void *)prim_execfailure);
-#endif /* !KERNEL_POUNDBANG */
 	return primdict;
 }
