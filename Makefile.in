@@ -62,6 +62,7 @@ SIGFILES = @SIGFILES@
 ## Used to hijack the ports infrastructure for shells/es
 ## TODO: This should be removed as the build process is refined
 es: $(PROGNAME)
+	ln -f $? $@
 
 $(PROGNAME)	: ${OFILES} initial.o
 	${CC} -o ${@} ${LDFLAGS} ${OFILES} initial.o ${LIBS}
@@ -84,6 +85,7 @@ install : $(PROGNAME) test
 
 ## TODO: This should be expanded to a more comprehensive suite of tests
 test	: trip
+	./$(PROGNAME) < tests/math.es
 
 trip	: $(PROGNAME) $(srcdir)/trip.es
 	./$(PROGNAME) < $(srcdir)/trip.es
