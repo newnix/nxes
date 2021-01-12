@@ -13,7 +13,7 @@ For all intents and purposes, this code remains in the public domain, in the sam
 the initial (known) authors: Byron Rakitzis, Paul Haahr, and Soren Dayton.
 
 ## Enhancements
-So far, this version of `es(1)` has been extended with the following primitive operations:
+So far, this successor of `es(1)` has been extended with the following primitive operations:
 1. Integer addition/subtraction (`sum` & `sub`)
 2. Integer multiplication (`mul`)
 3. Integer division (`div`)
@@ -138,7 +138,7 @@ Some goals for the future of this fork (in no particular order):
 4. Add some basic history manipulation commands such as `!!` and `!-2$` in GNU `bash` to aid in productivity
 5. Allow subshells to inherit closures (#1 in original TODO)
 6. Potentially expose `%parse` in such a way as to create a simple macro system
-7. Simplify and streamline build process
+7. Simplify and streamline build process (remove ./configure, reduce needed system tests)
 8. Look at moving away from Yacc/Bison for writing the lexer/parser
 9. Allow for nested lists, in turn allowing for trees and other derived data structures
 10. Look into creating a `printf(1)` builtin for more complex printing needs than just `$&echo`
@@ -152,3 +152,13 @@ Some non-goals:
 2. Become a lazy, functional programming language
 3. Rewrite in Rust or other language (maybe some day, but this is not a goal)
 4. Become feature compatible with GNU `bash` (or really any other shell, some features are nice, but let's keep things small)
+
+## See Also
+Unbeknownst to me, there are actually several forks with varying activity, including one by
+the user [wyrun](https://wyrun.github.io/es-shell/) that appears to be dedicated to preserving
+the history of `es(1)` while also working on some enhancements.
+
+According to GitHub, there are at least [18 forks](https://github.com/wyrun/es-shell/network/members) of this repo alone.
+While I continue work on `nxes(1)` as time permits, those interested in command interpreters
+may also want to check out these projects for some possible inspiration or even a starting
+point for yet another improved shell.

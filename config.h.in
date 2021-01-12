@@ -116,6 +116,7 @@
 /* Do you have sigaction? */
 #undef HAVE_SIGACTION
 
+/* XXX: This test is probably obsolete */
 /* Does your kernel support #!? */
 #undef KERNEL_POUNDBANG
 
@@ -125,6 +126,10 @@
 /* What type are your limits? */
 #undef LIMIT_T
 
+/*
+ * XXX: The assumptions about Solaris may not be applicable to Illumos 
+ * or even the most modern Solaris installations
+ */
 /* are we solaris? */
 #undef SOLARIS
 

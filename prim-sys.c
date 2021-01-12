@@ -105,6 +105,13 @@ static List
 	NOTREACHED;
 }
 
+/*
+ * TODO: As a quality of life improvement, this should update
+ * two environmental variables: PWD & OLDPWD, which can in
+ * turn be used to somewhat simplify the implementation of 
+ * pushd/popd and allow for built-in tracking in scripts instead
+ * of having to parse `{pwd}
+ */
 static List
 *prim_cd(List *list, Binding *binding, int evalflags) {
 	char *dir;
