@@ -26,19 +26,21 @@ CC	= @CC@
 INSTALL	= @INSTALL@
 
 ## Sanitizers to use, primarily for development/debugging purposes
-SANITIZERS = -fno-sanitize-trap=all -fsanitize=undefined
+SANITIZERS ?= -fno-sanitize-trap=all -fsanitize=undefined
 
-CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -Qn -g3 -O2 -pipe -std=c99\
+INCS = -I. -I/usr/include -I/usr/local/include
+
+LIBS = $(ADDLIBS) @LIBS@
+
+CFLAGS	= $(ADDCFLAGS) ${INCS} -Qn -g3 -O2 -pipe -std=c99\
 					-Wall -pedantic -fPIE -fPIC -fstack-protector-strong -fstack-protector-all\
 					-fstrict-enums -fstrict-return -fvisibility=hidden -flto\
 					${SANITIZERS}\
 					@CFLAGS@
 
 LDFLAGS	= $(ADDLDFLAGS) -Wl,-z,relro -Wl,-z,now -flto\
-					${SANITIZERS}\
+					${LIBS} ${SANITIZERS}\
 					@LDFLAGS@
-
-LIBS	= $(ADDLIBS) @LIBS@
 
 VPATH = $(srcdir)
 
@@ -65,10 +67,10 @@ es: $(PROGNAME)
 	ln -f $? $@
 
 $(PROGNAME)	: ${OFILES} initial.o
-	${CC} -o ${@} ${LDFLAGS} ${OFILES} initial.o ${LIBS}
+	${CC} -o ${@} ${LDFLAGS} $?
 
 esdump	: ${OFILES} dump.o
-	${CC} -o ${@} ${LDFLAGS} ${OFILES} dump.o ${LIBS}
+	${CC} -o ${@} ${LDFLAGS} $?
 
 clean	:
 	rm -f $(PROGNAME) ${OFILES} ${GEN} dump.o initial.o
@@ -77,7 +79,7 @@ distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status
 
 MANIFEST:
-	find . -type f | sed s/..// > MANIFEST
+	find . -type f | sed s/..// > $@
 
 install : $(PROGNAME) test
 	$(INSTALL) $(srcdir)/$(PROGNAME) $(bindir)
@@ -103,7 +105,7 @@ initial.c : esdump $(srcdir)/initial.es
 	./esdump < $(srcdir)/initial.es > initial.c
 
 sigmsgs.c : mksignal $(SIGFILES)
-	sh $(srcdir)/mksignal $(SIGFILES) > sigmsgs.c
+	$(SHELL) $(srcdir)/mksignal $(SIGFILES) > sigmsgs.c
 
 config.h  : config.h.in
 	./configure
