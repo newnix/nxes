@@ -15,6 +15,7 @@
  * TODO: Examine potential alternatives to this hashing function
  * as this may be needlessly slow, there are potential gains to be
  * made by replacing the hash function with a faster alternative
+ * TODO: Replace with either FNV1/FNV1a, XORshift, or XXHash
  */
 /* strhash2 -- the (probably too slow) haahr hash function */
 static unsigned long strhash2(const char *str1, const char *str2) {

@@ -146,6 +146,7 @@ Some goals for the future of this fork (in no particular order):
 12. Flesh out job control mechanism, support exists for creating new process groups and background execution, but no means to switch from background to foreground currently exists
 13. Remove the dependency on GNU readline or libedit for common features like tab completion, 
 making them optional for those who have a custom `.inputrc` that I have no intent to support.
+14. Investigate hashing methodology, consider something like FNV-1/FNV-1a hashing
 
 Some non-goals:
 1. Become a strict, functional programming language
