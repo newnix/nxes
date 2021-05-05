@@ -85,12 +85,16 @@ install : $(PROGNAME) test
 	$(INSTALL) $(srcdir)/$(PROGNAME) $(bindir)
 	$(INSTALL) $(srcdir)/$(PROGNAME).1 $(mandir)/man1
 
+## XXX: Discarding the environment as there seems to be an issue inheriting functions
+## when invoked from nxes. This should probably be fixed in nxes itself to prevent functions
+## from being exported to **environ. Such changes may, in turn, require a mechanism for inheriting
+## functions in a non-interactive child shell.
 ## TODO: This should be expanded to a more comprehensive suite of tests
 test	: trip
-	./$(PROGNAME) < tests/math.es
+	/usr/bin/env -i ./$(PROGNAME) < tests/math.es
 
 trip	: $(PROGNAME) $(srcdir)/trip.es
-	./$(PROGNAME) < $(srcdir)/trip.es
+	/usr/bin/env -i ./$(PROGNAME) < $(srcdir)/trip.es
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}

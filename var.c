@@ -5,6 +5,10 @@
 #include "var.h"
 #include "term.h"
 
+#ifdef DEBUG_ALL
+#include <stdio.h>
+#endif
+
 #if PROTECT_ENV
 #define	ENV_FORMAT	"%F=%W"
 #define	ENV_DECODE	"%N"
@@ -62,6 +66,7 @@ static size_t VarScan(void *p) {
 	return sizeof (Var);
 }
 
+/* TODO: hand off to libc strtol(3) instead to allow for potentially leveraging optimized assembly routines */
 /* iscounting -- is it a counter number, i.e., an integer > 0 */
 static Boolean iscounting(const char *name) {
 	int c;
@@ -135,6 +140,7 @@ extern List *varlookup(const char *name, Binding *bp) {
 	return var->defn;
 }
 
+/* FIXME: Add documentation as to why this is needed in addition to varlookup() */
 extern List *varlookup2(char *name1, char *name2, Binding *bp) {
 	Var *var;
 	
@@ -355,6 +361,7 @@ extern void initvars(void) {
 #endif
 }
 
+/* XXX: This and initenv() are the targets for fixing how functions are exported as environment variables */
 /* importvar -- import a single environment variable */
 static void importvar(char *name0, char *value) {
 	char sep[2] = { ENV_SEPARATOR, '\0' };
@@ -367,6 +374,12 @@ static void importvar(char *name0, char *value) {
 		List *list;
 		gcdisable();
 		for (list = defn; list != NULL; list = list->next) {
+			/* 
+			 * TODO: Determine if declaring variables like this has any significant benefit over
+			 * declaring them in the function's scope. I'm not sure if this style delays allocating
+			 * space for these stack variables or if they just prevent access from outside
+			 * the scope of this loop
+			 */
 			int offset = 0;
 			const char *word = list->term->str;
 			const char *escape;
@@ -376,23 +389,17 @@ static void importvar(char *name0, char *value) {
 				switch (escape[1]) {
 				    case '\0':
 					if (list->next != NULL) {
-						const char *str2
-						  = list->next->term->str;
-						char *str
-						  = gcalloc(offset
-							    + strlen(str2) + 1,
-							    &StringTag);
+						const char *str2 = list->next->term->str;
+						char *str = gcalloc(offset + strlen(str2) + 1, &StringTag);
 						memcpy(str, word, offset - 1);
-						str[offset - 1]
-						  = ENV_SEPARATOR;
+						str[offset - 1] = ENV_SEPARATOR;
 						strcpy(str + offset, str2);
 						list->term->str = str;
 						list->next = list->next->next;
 					}
 					break;
 				    case ENV_ESCAPE: {
-					char *str
-					  = gcalloc(strlen(word), &StringTag);
+					char *str = gcalloc(strlen(word), &StringTag);
 					memcpy(str, word, offset);
 					strcpy(str + offset, escape + 2);
 					list->term->str = str;
@@ -419,24 +426,33 @@ extern void initenv(char **envp, Boolean protected) {
 		size_t nlen;
 		char *eq = strchr(envstr, '=');
 		char *name;
+#ifdef DEBUG_ALL
+		/* 
+		 * FIXME: Don't rely on stdlib here if avoidable, use built-in methods like prim_echo()
+		 * XXX: This is not pretty, but I find it helpfuly in interactive discovery of potential improvements
+		 * and the current flow of execution.
+		 */
+		fprintf(stderr, "[DBG] %s: envp = %p | %s\n", __func__, (void *)envp, *envp);
+#endif /* DEBUG_ALL */
 		if (eq == NULL) {
 			env->vector[env->count++] = envstr;
+			/* Allocate new buffer if current environment buffer is full */
 			if (env->count == env->alloclen) {
 				Vector *newenv = mkvector(env->alloclen * 2);
 				newenv->count = env->count;
-				memcpy(newenv->vector, env->vector,
-				       env->count * sizeof *env->vector);
+				memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
 				env = newenv;
 			}
 			continue;
 		}
-		for (nlen = eq - envstr; nlen >= bufsize; bufsize *= 2)
+		/* Calculate environmental variable string length, allocate new buffer if needed */
+		for (nlen = eq - envstr; nlen >= bufsize; bufsize *= 2) {
 			buf = erealloc(buf, bufsize);
+		}
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
-		if (!protected
-		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
 			importvar(name, eq);
 	}
 

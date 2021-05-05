@@ -179,6 +179,7 @@ fn primitives {
 	}
 }
 
+## TODO: Test if pushing to the head of the list instead of the tail is faster
 ## Stack management functions
 ## By necessity, these mutate their stack argument
 fn push stack value {
@@ -209,7 +210,7 @@ fn pushd target {
 	}
 	{%seq
 		{%and 
-			{push dirstack <={%backquote <={%flatten '' $ifs} {stat -f "%R" $target}}}
+			{push dirstack <={%backquote <={%flatten '' $ifs} {readlink -f $target}}}
 			## Pop the entry if chdir(2) fails
 			{%or {cd $target} {pop dirstack}}
 		}
@@ -231,6 +232,7 @@ fn popd {
 	}
 }
 
+## TODO: Print dirstack in a more intuitive manner
 fn dirs {
 	echo $dirstack
 }
