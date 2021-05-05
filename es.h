@@ -16,7 +16,12 @@
 #define GCVERBOSE 1
 #define GCINFO 1
 #define LISPTREES 1
-#endif
+#endif /* DEBUG_ALL */
+
+/* Warn whoever's compiling the code that DEBUG_ALL is meant to be super noisy */
+#ifdef DEBUG_ALL
+#warning "DEBUG_ALL makes nxes EXTREMELY noisy! It is meant for development NOT regular use!"
+#endif /* DEBUG_ALL */
 
 /*
  * the fundamental es data structures.
