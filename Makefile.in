@@ -59,6 +59,12 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 OTHER	= Makefile parse.y mksignal
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
+## Inspired by OpenBSD's KARL, allows for relatively easy generation of 40!
+## (815915283247897734345611269596115894272000000000) potential binaries. 
+## Probably not needed or particularly useful for most deployments, but I 
+## think it's a nice feature to have available.
+LINK_RANDOM != echo ${OFILES} | tr " " "\n" | sort -R | tr " " "\n"
+
 SIGFILES = @SIGFILES@
 
 ## Used to hijack the ports infrastructure for shells/es
@@ -113,6 +119,9 @@ sigmsgs.c : mksignal $(SIGFILES)
 
 config.h  : config.h.in
 	./configure
+
+unique: ${OFILES} initial.o
+	$(CC) -o $(PROGNAME) ${LDFLAGS} $(LINK_RANDOM) initial.o
 
 # --- dependencies ---
 
