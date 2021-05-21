@@ -133,33 +133,43 @@ Please read through README.orig to see the original text, especially as this is 
 ### Goals
 Some goals for the future of this fork (in no particular order):
 1. Modernize codebase (Drop obsolete hacks, attempt to make future maintenance easier)
-2. Add primitives to facilitate use as a glue language or midway point between POSIX `sh` and "real" languages like Racket/C/Python, etc.
+2. Add primitives to facilitate use as a glue language or midway point between POSIX
+`sh` and "real" languages like Racket/C/Python, etc.
 3. Work on making `nxes` tail recursive, this is mentioned in the original TODO (#2)
-4. Add some basic history manipulation commands such as `!!` and `!-2$` in GNU `bash` to aid in productivity
+4. Add some basic history manipulation commands such as `!!` and `!-2$`
+in `csh` to aid in productivity
 5. Allow subshells to inherit closures (#1 in original TODO)
 6. Potentially expose `%parse` in such a way as to create a simple macro system
 7. Simplify and streamline build process (remove ./configure, reduce needed system tests)
 8. Look at moving away from Yacc/Bison for writing the lexer/parser
 9. Allow for nested lists, in turn allowing for trees and other derived data structures
 10. Look into creating a `printf(1)` builtin for more complex printing needs than just `$&echo`
-11. Consider changing variable/function binding syntax using more LISP-like forms, this would free up `=` from being a special character, which should make flags requiring '=' (e.g. `clang -std=c99`) more ergonomic than with the current parsing grammar. (having to do `'='` or similar)
-12. Flesh out job control mechanism, support exists for creating new process groups and background execution, but no means to switch from background to foreground currently exists
+11. Consider changing variable/function binding syntax using more LISP-like forms (e.g. `def x 2`),
+this would free up `=` from being a special character, which should make flags requiring '='
+(e.g. `clang -std=c99`) more ergonomic than with the current parsing grammar.
+(having to do `'='` or similar)
+12. Flesh out job control mechanism, support exists for creating new process groups
+and background execution, but no means to switch from background to foreground currently exists
 13. Remove the dependency on GNU readline or libedit for common features like tab completion, 
 making them optional for those who have a custom `.inputrc` that I have no intent to support.
-14. Investigate hashing methodology, consider something like FNV-1/FNV-1a hashing
+14. Investigate hashing methodology, consider something like FNV-1/FNV-1a/XXHash hashing
+15. Examine how difficult adding floating-point support is for numeric computations, this
+allows for significantly more potential uses, but adhering to IEEE 754 and making it user friendly
+enough to be used may not be worthwhile for a shell.
 
 Some non-goals:
 1. Become a strict, functional programming language
 2. Become a lazy, functional programming language
 3. Rewrite in Rust or other language (maybe some day, but this is not a goal)
-4. Become feature compatible with GNU `bash` (or really any other shell, some features are nice, but let's keep things small)
+4. Become feature compatible with GNU `bash` (or really any other shell,
+some features are nice, but let's keep things small)
 
 ## See Also
 Unbeknownst to me, there are actually several forks with varying activity, including one by
-the user [wyrun](https://wyrun.github.io/es-shell/) that appears to be dedicated to preserving
+the user [wryun](https://wryun.github.io/es-shell/) that appears to be dedicated to preserving
 the history of `es(1)` while also working on some enhancements.
 
-According to GitHub, there are at least [18 forks](https://github.com/wyrun/es-shell/network/members) of this repo alone.
+According to GitHub, there are at least [18 forks](https://github.com/wryun/es-shell/network/members) of this repo alone.
 While I continue work on `nxes(1)` as time permits, those interested in command interpreters
 may also want to check out these projects for some possible inspiration or even a starting
 point for yet another improved shell.

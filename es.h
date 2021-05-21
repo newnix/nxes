@@ -11,15 +11,16 @@
 #define	ENV_ESCAPE	'\002'		/* control-B */
 
 /* Setting this one macro should allow greater runtime introspection */
-#if DEBUG_ALL
+#if defined(DEBUG_ALL)
 #define GCDEBUG 1
 #define GCVERBOSE 1
 #define GCINFO 1
 #define LISPTREES 1
-#endif /* DEBUG_ALL */
-
+/* Make sure asserts are included */
+#if defined(NDEBUG)
+  #undef NDEBUG
+#endif /* defined(NDEBUG) */
 /* Warn whoever's compiling the code that DEBUG_ALL is meant to be super noisy */
-#ifdef DEBUG_ALL
 #warning "DEBUG_ALL makes nxes EXTREMELY noisy! It is meant for development NOT regular use!"
 #endif /* DEBUG_ALL */
 

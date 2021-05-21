@@ -103,9 +103,13 @@ extern int fdmap(int fd) {
 	return fd;
 }
 
+/*
+ * TODO: Investigate this function, UBSAN reports an issue
+ * with applying a zero offset to a NULL pointer.
+ */
 /* remapfds -- apply the fd map to the current file descriptor table */
 static void remapfds(void) {
-	Defer *defer, *defend = &deftab[defcount];
+	Defer *defer, *defend = &deftab[defcount]; /* This is the issue UBSAN finds, need to investigate how to avoid it */
 	for (defer = deftab; defer < defend; defer++) {
 		unregisterfd(&defer->realfd);
 		dodeferred(defer->realfd, defer->userfd);
