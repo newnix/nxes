@@ -22,8 +22,8 @@ static char *tokenbuf = NULL;
 
 
 /*
- *	Special characters (i.e., "non-word") in es:
- *		\t \n # ; & | ^ $ = ` ' ! { } ( ) < > \
+ *  Special characters (i.e., "non-word") in es:
+ *  \t \n # ; & | ^ $ = ` ' ! { } ( ) < > \
  */
 
 const char nw[] = {
