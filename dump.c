@@ -34,27 +34,33 @@
 
 static Dict *cvars, *strings;
 
-static Boolean allprintable(const char *s) {
+static Boolean
+allprintable(const char *s) {
 	int c;
-	for (; (c = *(unsigned char *) s) != '\0'; s++)
-		if (!isprint(c) || c == '"' || c == '\\')
+	for (; (c = *(unsigned char *) s) != '\0'; s++) {
+		if (!isprint(c) || c == '"' || c == '\\') {
 			return FALSE;
+		}
+	}
 	return TRUE;
 }
 
-static char *dumpstring(char *string) {
+static char
+*dumpstring(char *string) {
 	char *name;
-	if (string == NULL)
+	if (string == NULL) {
 		return "NULL";
+	}
 	name = dictget(strings, string);
 	if (name == NULL) {
 		name = str("S_%F", string);
-		if (strlen(name) > MAXVARNAME)
+		if (strlen(name) > MAXVARNAME) {
 			name = str("X_%ulx", string);
+		}
 		print("static const char %s[] = ", name);
-		if (allprintable(string))
+		if (allprintable(string)) {
 			print("\"%s\";\n", string);
-		else {
+		} else {
 			int c;
 			char *s;
 			print("{ ");
@@ -81,7 +87,8 @@ static char *dumpstring(char *string) {
 
 static char *dumplist(List *list);
 
-static const char *nodename(NodeKind k) {
+static const char
+*nodename(NodeKind k) {
 	switch(k) {
 	default:	panic("nodename: bad node kind %d", k);
 	case nAssign:	return "Assign";
@@ -104,10 +111,12 @@ static const char *nodename(NodeKind k) {
 	}
 }
 
-static char *dumptree(Tree *tree) {
+static char
+*dumptree(Tree *tree) {
 	char *name;
-	if (tree == NULL)
+	if (tree == NULL) {
 		return "NULL";
+	}
 	name = str("&T_%ulx", tree);
 	if (dictget(cvars, name) == NULL) {
 		switch (tree->kind) {
@@ -132,10 +141,12 @@ static char *dumptree(Tree *tree) {
 	return name;
 }
 
-static char *dumpbinding(Binding *binding) {
+static char
+*dumpbinding(Binding *binding) {
 	char *name;
-	if (binding == NULL)
+	if (binding == NULL) {
 		return "NULL";
+	}
 	name = str("&B_%ulx", binding);
 	if (dictget(cvars, name) == NULL) {
 		print(
@@ -150,10 +161,12 @@ static char *dumpbinding(Binding *binding) {
 	return name;
 }
 
-static char *dumpclosure(Closure *closure) {
+static char
+*dumpclosure(Closure *closure) {
 	char *name;
-	if (closure == NULL)
+	if (closure == NULL) {
 		return "NULL";
+	}
 	name = str("&C_%ulx", closure);
 	if (dictget(cvars, name) == NULL) {
 		print(
@@ -167,10 +180,12 @@ static char *dumpclosure(Closure *closure) {
 	return name;
 }
 
-static char *dumpterm(Term *term) {
+static char
+*dumpterm(Term *term) {
 	char *name;
-	if (term == NULL)
+	if (term == NULL) {
 		return "NULL";
+	}
 	name = str("&E_%ulx", term);
 	if (dictget(cvars, name) == NULL) {
 		print(
@@ -184,10 +199,12 @@ static char *dumpterm(Term *term) {
 	return name;
 }
 
-static char *dumplist(List *list) {
+static char
+*dumplist(List *list) {
 	char *name;
-	if (list == NULL)
+	if (list == NULL) {
 		return "NULL";
+	}
 	name = str("&L_%ulx", list);
 	if (dictget(cvars, name) == NULL) {
 		print(
@@ -201,29 +218,41 @@ static char *dumplist(List *list) {
 	return name;
 }
 
-static void dumpvar(void *ignore, char *key, void *value) {
+static void
+dumpvar(void *ignore, char *key, void *value) {
 	Var *var = value;
 	dumpstring(key);
 	dumplist(var->defn);
 }
 
-static void dumpdef(char *name, Var *var) {
+static void
+dumpdef(char *name, Var *var) {
 	print("\t{ %s, (const List *) %s },\n", dumpstring(name), dumplist(var->defn));
 }
 
-static void dumpfunctions(void *ignore, char *key, void *value) {
-	if (hasprefix(key, "fn-"))
+/*
+ * TODO: Look into collapsing these three functions if possible since they
+ * only differ in the string that they're filtering against
+ */
+static void
+dumpfunctions(void *ignore, char *key, void *value) {
+	if (hasprefix(key, "fn-")) {
 		dumpdef(key, value);
+	}
 }
 
-static void dumpsettors(void *ignore, char *key, void *value) {
-	if (hasprefix(key, "set-"))
+static void
+dumpsettors(void *ignore, char *key, void *value) {
+	if (hasprefix(key, "set-")) {
 		dumpdef(key, value);
+	}
 }
 
-static void dumpvariables(void *ignore, char *key, void *value) {
-	if (!hasprefix(key, "fn-") && !hasprefix(key, "set-"))
+static void
+dumpvariables(void *ignore, char *key, void *value) {
+	if (!hasprefix(key, "fn-") && !hasprefix(key, "set-")) {
 		dumpdef(key, value);
+	}
 }
 
 #define TreeTypes \
@@ -233,20 +262,23 @@ static void dumpvariables(void *ignore, char *key, void *value) {
 TreeTypes
 #define	PPSTRING(s)	STRING(s)
 
-static void printheader(List *title) {
+static void
+printheader(List *title) {
 	if (
 		   offsetof(Tree, u[0].s) != offsetof(Tree_s,  u[0].s)
 		|| offsetof(Tree, u[0].p) != offsetof(Tree_p,  u[0].p)
 		|| offsetof(Tree, u[0].p) != offsetof(Tree_pp, u[0].p)
 		|| offsetof(Tree, u[1].p) != offsetof(Tree_pp, u[1].p)
-	)
+	) {
 		panic("dumpstate: Tree union sizes do not match struct sizes");
+	}
 
 	print("/* %L */\n\n#include \"es.h\"\n#include \"term.h\"\n\n", title, " ");
 	print("%s\n\n", PPSTRING(TreeTypes));
 }
 
-extern void runinitial(void) {
+extern void
+runinitial(void) {
 	List *title = runfd(0, "initial.es", 0);
 	
 	gcdisable();

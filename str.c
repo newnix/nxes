@@ -5,7 +5,8 @@
 #include "print.h"
 
 /* grow -- buffer grow function for str() */
-static void str_grow(Format *f, size_t more) {
+static void
+str_grow(Format *f, size_t more) {
 	Buffer *buf = expandbuffer(f->u.p, more);
 	f->u.p		= buf;
 	f->buf		= buf->str + (f->buf - f->bufbegin);
@@ -14,7 +15,8 @@ static void str_grow(Format *f, size_t more) {
 }
 
 /* strv -- print a formatted string into gc space */
-extern char *strv(const char *fmt, va_list args) {
+extern char
+*strv(const char *fmt, va_list args) {
 	Buffer *buf;
 	Format format;
 
@@ -40,7 +42,8 @@ extern char *strv(const char *fmt, va_list args) {
 }
 
 /* str -- create a string (in garbage collection space) by printing to it */
-extern char *str VARARGS1(const char *, fmt) {
+extern char
+*str VARARGS1(const char *, fmt) {
 	char *s;
 	va_list args;
 	VA_START(args, fmt);
@@ -53,7 +56,8 @@ extern char *str VARARGS1(const char *, fmt) {
 #define	PRINT_ALLOCSIZE	64
 
 /* mprint_grow -- buffer grow function for mprint() */
-static void mprint_grow(Format *format, size_t more) {
+static void
+mprint_grow(Format *format, size_t more) {
 	char *buf;
 	size_t len = format->bufend - format->bufbegin + 1;
 	len = (len >= more)
@@ -66,7 +70,8 @@ static void mprint_grow(Format *format, size_t more) {
 }
 
 /* mprint -- create a string in ealloc space by printing to it */
-extern char *mprint VARARGS1(const char *, fmt) {
+extern char
+*mprint VARARGS1(const char *, fmt) {
 	Format format;
 	format.u.n = 1;
 	VA_START(format.args, fmt);
@@ -91,7 +96,8 @@ extern char *mprint VARARGS1(const char *, fmt) {
 
 DefineTag(StrList, static);
 
-extern StrList *mkstrlist(char *str, StrList *next) {
+extern StrList
+*mkstrlist(char *str, StrList *next) {
 	gcdisable();
 	assert(str != NULL);
 	Ref(StrList *, list, gcnew(StrList));
@@ -101,13 +107,15 @@ extern StrList *mkstrlist(char *str, StrList *next) {
 	RefReturn(list);
 }
 
-static void *StrListCopy(void *op) {
+static void
+*StrListCopy(void *op) {
 	void *np = gcnew(StrList);
 	memcpy(np, op, sizeof (StrList));
 	return np;
 }
 
-static size_t StrListScan(void *p) {
+static size_t
+StrListScan(void *p) {
 	StrList *list = p;
 	list->str = forward(list->str);
 	list->next = forward(list->next);

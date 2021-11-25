@@ -11,7 +11,8 @@ static List *value;
 static Boolean ifsvalid = FALSE;
 static char ifs[10], isifs[256];
 
-extern void startsplit(const char *sep, Boolean coalescef) {
+extern void
+startsplit(const char *sep, Boolean coalescef) {
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
@@ -28,15 +29,18 @@ extern void startsplit(const char *sep, Boolean coalescef) {
 		if (strlen(sep) + 1 < sizeof ifs) {
 			strcpy(ifs, sep);
 			ifsvalid = TRUE;
-		} else
+		} else {
 			ifsvalid = FALSE;
+		}
 		memzero(isifs, sizeof isifs);
-		for (isifs['\0'] = TRUE; (c = (*(unsigned const char *)sep)) != '\0'; sep++)
+		for (isifs['\0'] = TRUE; (c = (*(unsigned const char *)sep)) != '\0'; sep++) {
 			isifs[c] = TRUE;
+		}
 	}
 }
 
-extern void splitstring(char *in, size_t len, Boolean endword) {
+extern void
+splitstring(char *in, size_t len, Boolean endword) {
 	Buffer *buf = buffer;
 	unsigned char *s = (unsigned char *) in, *inend = s + len;
 
@@ -49,20 +53,23 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 		return;
 	}
 
-	if (!coalesce && buf == NULL)
+	if (!coalesce && buf == NULL) {
 		buf = openbuffer(0);
+	}
 
 	while (s < inend) {
 		int c = *s++;
-		if (buf != NULL)
+		if (buf != NULL) {
 			if (isifs[c]) {
 				Term *term = mkstr(sealcountedbuffer(buf));
 				value = mklist(term, value);
 				buf = coalesce ? NULL : openbuffer(0);
-			} else
+			} else {
 				buf = bufputc(buf, c);
-		else if (!isifs[c])
+			}
+		} else if (!isifs[c]) {
 			buf = bufputc(openbuffer(0), c);
+		}
 	}
 
 	if (endword && buf != NULL) {
@@ -73,7 +80,8 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 	buffer = buf;
 }
 
-extern List *endsplit(void) {
+extern List
+*endsplit(void) {
 	List *result;
 
 	if (buffer != NULL) {
@@ -86,7 +94,8 @@ extern List *endsplit(void) {
 	return result;
 }
 
-extern List *fsplit(const char *sep, List *list, Boolean coalesce) {
+extern List
+*fsplit(const char *sep, List *list, Boolean coalesce) {
 	Ref(List *, lp, list);
 	startsplit(sep, coalesce);
 	for (; lp != NULL; lp = lp->next) {

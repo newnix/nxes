@@ -4,7 +4,8 @@
 #include "gc.h"
 
 /* concat -- cartesion cross product concatenation */
-extern List *concat(List *list1, List *list2) {
+extern List
+*concat(List *list1, List *list2) {
 	List **p, *result = NULL;
 
 	gcdisable();
@@ -23,34 +24,39 @@ extern List *concat(List *list1, List *list2) {
 }
 
 /* qcat -- concatenate two quote flag terms */
-static char *qcat(const char *q1, const char *q2, Term *t1, Term *t2) {
+static char
+*qcat(const char *q1, const char *q2, Term *t1, Term *t2) {
 	size_t len1, len2;
 	char *result, *s;
 
 	assert(gcisblocked());
 
-	if (q1 == QUOTED && q2 == QUOTED)
+	if (q1 == QUOTED && q2 == QUOTED) {
 		return QUOTED;
-	if (q1 == UNQUOTED && q2 == UNQUOTED)
+	}
+	if (q1 == UNQUOTED && q2 == UNQUOTED) {
 		return UNQUOTED;
+	}
 
 	len1 = (q1 == QUOTED || q1 == UNQUOTED) ? strlen(getstr(t1)) : strlen(q1);
 	len2 = (q2 == QUOTED || q2 == UNQUOTED) ? strlen(getstr(t2)) : strlen(q2);
 	result = s = gcalloc(len1 + len2 + 1, &StringTag);
 
-	if (q1 == QUOTED)
+	if (q1 == QUOTED) {
 		memset(s, 'q', len1);
-	else if (q1 == UNQUOTED)
+	} else if (q1 == UNQUOTED) {
 		memset(s, 'r', len1);
-	else
+	} else {
 		memcpy(s, q1, len1);
+	}
 	s += len1;
-	if (q2 == QUOTED)
+	if (q2 == QUOTED) {
 		memset(s, 'q', len2);
-	else if (q2 == UNQUOTED)
+	} else if (q2 == UNQUOTED) {
 		memset(s, 'r', len2);
-	else
+	} else {
 		memcpy(s, q2, len2);
+	}
 	s += len2;
 	*s = '\0';
 
@@ -58,7 +64,8 @@ static char *qcat(const char *q1, const char *q2, Term *t1, Term *t2) {
 }
 
 /* qconcat -- cartesion cross product concatenation; also produces a quote list */
-static List *qconcat(List *list1, List *list2, StrList *ql1, StrList *ql2, StrList **quotep) {
+static List
+*qconcat(List *list1, List *list2, StrList *ql1, StrList *ql2, StrList **quotep) {
 	List **p, *result = NULL;
 	StrList **qp;
 
@@ -84,7 +91,8 @@ static List *qconcat(List *list1, List *list2, StrList *ql1, StrList *ql2, StrLi
 }
 
 /* subscript -- variable subscripting */
-static List *subscript(List *list, List *subs) {
+static List
+*subscript(List *list, List *subs) {
 	int lo, hi, len, counter;
 	List *result, **prevp, *current;
 
@@ -113,9 +121,9 @@ static List *subscript(List *list, List *subs) {
 		if (subs != NULL && streq(getstr(subs->term), "...")) {
 		mid_range:
 			subs = subs->next;
-			if (subs == NULL)
+			if (subs == NULL) {
 				hi = len;
-			else {
+			} else {
 				hi = atoi(getstr(subs->term));
 				if (hi < 1) {
 					Ref(char *, bad, getstr(subs->term));
@@ -123,20 +131,24 @@ static List *subscript(List *list, List *subs) {
 					fail("es:subscript", "bad subscript: %s", bad);
 					RefEnd(bad);
 				}
-				if (hi > len)
+				if (hi > len) {
 					hi = len;
+				}
 				subs = subs->next;
 			}
-		} else
+		} else {
 			hi = lo;
-		if (lo > len)
+		}
+		if (lo > len) {
 			continue;
+		}
 		if (counter > lo) {
 			current = list;
 			counter = 1;
 		}
-		for (; counter < lo; counter++, current = current->next)
+		for (; counter < lo; counter++, current = current->next) {
 			;
+		}
 		for (; counter <= hi; counter++, current = current->next) {
 			*prevp = mklist(current->term, NULL);
 			prevp = &(*prevp)->next;
@@ -149,7 +161,8 @@ static List *subscript(List *list, List *subs) {
 }
 
 /* glom1 -- glom when we don't need to produce a quote list */
-static List *glom1(Tree *tree, Binding *binding) {
+static List
+*glom1(Tree *tree, Binding *binding) {
 	Ref(List *, result, NULL);
 	Ref(List *, tail, NULL);
 	Ref(Tree *, tp, tree);
@@ -184,12 +197,14 @@ static List *glom1(Tree *tree, Binding *binding) {
 			for (; var != NULL; var = var->next) {
 				list = listcopy(varlookup(getstr(var->term), bp));
 				if (list != NULL) {
-					if (result == NULL)
+					if (result == NULL) {
 						tail = result = list;
-					else
+					} else {
 						tail->next = list;
-					for (; tail->next != NULL; tail = tail->next)
+					}
+					for (; tail->next != NULL; tail = tail->next) {
 						;
+					}
 				}
 				list = NULL;
 			}
@@ -197,10 +212,12 @@ static List *glom1(Tree *tree, Binding *binding) {
 			break;
 		case nVarsub:
 			list = glom1(tp->u[0].p, bp);
-			if (list == NULL)
+			if (list == NULL) {
 				fail("es:glom", "null variable name in subscript");
-			if (list->next != NULL)
+			}
+			if (list->next != NULL) {
 				fail("es:glom", "multi-word variable name in subscript");
+			}
 			Ref(char *, name, getstr(list->term));
 			list = varlookup(name, bp);
 			Ref(List *, sub, glom1(tp->u[1].p, bp));
@@ -228,12 +245,14 @@ static List *glom1(Tree *tree, Binding *binding) {
 		}
 
 		if (list != NULL) {
-			if (result == NULL)
+			if (result == NULL) {
 				tail = result = list;
-			else
+			} else {
 				tail->next = list;
-			for (; tail->next != NULL; tail = tail->next)
+			}
+			for (; tail->next != NULL; tail = tail->next) {
 				;
+			}
 		}
 		RefEnd(list);
 	}
@@ -243,7 +262,8 @@ static List *glom1(Tree *tree, Binding *binding) {
 }
 
 /* glom2 -- glom and produce a quoting list */
-extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
+extern List
+*glom2(Tree *tree, Binding *binding, StrList **quotep) {
 	Ref(List *, result, NULL);
 	Ref(List *, tail, NULL);
 	Ref(StrList *, qtail, NULL);
@@ -287,8 +307,9 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 		default:
 			list = glom1(tp, bp);
 			Ref(List *, lp, list);
-			for (; lp != NULL; lp = lp->next)
+			for (; lp != NULL; lp = lp->next) {
 				qlist = mkstrlist(QUOTED, qlist);
+			}
 			RefEnd(lp);
 			tp = NULL;
 			break;
@@ -304,8 +325,9 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 				tail->next = list;
 				qtail->next = qlist;
 			}
-			for (; tail->next != NULL; tail = tail->next, qtail = qtail->next)
+			for (; tail->next != NULL; tail = tail->next, qtail = qtail->next) {
 				;
+			}
 			assert(qtail->next == NULL);
 		}
 		RefEnd2(qlist, list);
@@ -316,7 +338,8 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 }
 
 /* glom -- top level glom dispatching */
-extern List *glom(Tree *tree, Binding *binding, Boolean globit) {
+extern List
+*glom(Tree *tree, Binding *binding, Boolean globit) {
 	if (globit) {
 		Ref(List *, list, NULL);
 		Ref(StrList *, quote, NULL);
@@ -324,6 +347,7 @@ extern List *glom(Tree *tree, Binding *binding, Boolean globit) {
 		list = glob(list, quote);
 		RefEnd(quote);
 		RefReturn(list);
-	} else
+	} else {
 		return glom1(tree, binding);
+	}
 }

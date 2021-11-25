@@ -9,7 +9,8 @@
 
 DefineTag(Closure, static);
 
-extern Closure *mkclosure(Tree *tree, Binding *binding) {
+extern Closure
+*mkclosure(Tree *tree, Binding *binding) {
 	gcdisable();
 	Ref(Closure *, closure, gcnew(Closure));
 	closure->tree = tree;
@@ -18,13 +19,15 @@ extern Closure *mkclosure(Tree *tree, Binding *binding) {
 	RefReturn(closure);
 }
 
-static void *ClosureCopy(void *op) {
+static void
+*ClosureCopy(void *op) {
 	void *np = gcnew(Closure);
 	memcpy(np, op, sizeof (Closure));
 	return np;
 }
 
-static size_t ClosureScan(void *p) {
+static size_t
+ClosureScan(void *p) {
 	Closure *closure = p;
 	closure->tree = forward(closure->tree);
 	closure->binding = forward(closure->binding);
@@ -32,10 +35,12 @@ static size_t ClosureScan(void *p) {
 }
 
 /* revtree -- destructively reverse a list stored in a tree */
-static Tree *revtree(Tree *tree) {
+static Tree
+*revtree(Tree *tree) {
 	Tree *prev, *next;
-	if (tree == NULL)
+	if (tree == NULL) {
 		return NULL;
+	}
 	prev = NULL;
 	do {
 		assert(tree->kind == nList);
@@ -54,10 +59,11 @@ typedef struct Chain {
 /* Internal initialization of the chain */
 static Chain *chain = NULL;
 
-static Binding *extract(Tree *tree, Binding *bindings) {
+static Binding
+*extract(Tree *tree, Binding *bindings) {
 	assert(gcisblocked());
 
-	/* 
+	/*
 	 * Tree layout:
 	 * Nodekind kind;
 	 * union { Tree *p; char *s; int i; } u[2];
@@ -94,16 +100,18 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 								fail("$&parse", "bad count in $&nestedbinding: %d", count);
 								NOTREACHED;
 							}
-							if (i == count)
+							if (i == count) {
 								break;
+							}
 						}
 						term = mkterm(NULL, cp->closure);
 					} else {
 						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
 						NOTREACHED;
 					}
-				} else
+				} else {
 					term = mkstr(word->u[0].s);
+				}
 				list = mklist(term, list);
 			}
 			bindings = mkbinding(name->u[0].s, list, bindings);
@@ -113,15 +121,17 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 	return bindings;
 }
 
-extern Closure *extractbindings(Tree *tree0) {
+extern Closure
+*extractbindings(Tree *tree0) {
 	Chain me;
 	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
 
 	gcdisable();
 
-	if (tree->kind == nList && tree->u[1].p == NULL)
-		tree = tree->u[0].p; 
+	if (tree->kind == nList && tree->u[1].p == NULL) {
+		tree = tree->u[0].p;
+	}
 
 	me.closure = mkclosure(NULL, NULL);
 	me.next = chain;
@@ -132,8 +142,9 @@ extern Closure *extractbindings(Tree *tree0) {
 		while (tree->kind == nClosure) {
 			bindings = extract(tree->u[0].p, bindings);
 			tree = tree->u[1].p;
-			if (tree->kind == nList && tree->u[1].p == NULL)
-				tree = tree->u[0].p; 
+			if (tree->kind == nList && tree->u[1].p == NULL) {
+				tree = tree->u[0].p;
+			}
 		}
 
 	CatchException (e)
@@ -159,7 +170,8 @@ extern Closure *extractbindings(Tree *tree0) {
 
 DefineTag(Binding, static);
 
-extern Binding *mkbinding(char *name, List *defn, Binding *next) {
+extern Binding
+*mkbinding(char *name, List *defn, Binding *next) {
 	assert(next == NULL || next->name != NULL);
 	validatevar(name);
 	gcdisable();
@@ -171,10 +183,11 @@ extern Binding *mkbinding(char *name, List *defn, Binding *next) {
 	RefReturn(binding);
 }
 
-extern Binding *reversebindings(Binding *binding) {
-	if (binding == NULL)
+extern Binding
+*reversebindings(Binding *binding) {
+	if (binding == NULL) {
 		return NULL;
-	else {
+	} else {
 		Binding *prev, *next;
 		prev = NULL;
 		do {
@@ -186,13 +199,15 @@ extern Binding *reversebindings(Binding *binding) {
 	}
 }
 
-static void *BindingCopy(void *op) {
+static void
+*BindingCopy(void *op) {
 	void *np = gcnew(Binding);
 	memcpy(np, op, sizeof (Binding));
 	return np;
 }
 
-static size_t BindingScan(void *p) {
+static size_t
+BindingScan(void *p) {
 	Binding *binding = p;
 	binding->name = forward(binding->name);
 	binding->defn = forward(binding->defn);

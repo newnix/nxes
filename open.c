@@ -20,7 +20,8 @@ static int mode_masks[] = {
 	O_RDWR   | O_CREAT | O_APPEND,	/* oReadAppend */
 };
 
-extern int eopen(char *name, OpenKind k) {
+extern int
+eopen(char *name, OpenKind k) {
 	assert((unsigned) k < arraysize(mode_masks));
 	return open(name, mode_masks[k], 0666);
 }

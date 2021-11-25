@@ -7,7 +7,8 @@ static List *args;
 static Term *termarg;
 static int nextchar;
 
-extern void esoptbegin(List *list, const char *caller, const char *usagemsg) {
+extern void
+esoptbegin(List *list, const char *caller, const char *usagemsg) {
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
@@ -24,19 +25,22 @@ extern void esoptbegin(List *list, const char *caller, const char *usagemsg) {
 	nextchar = 0;
 }
 
-extern int esopt(const char *options) {
+extern int
+esopt(const char *options) {
 	int c;
 	const char *arg, *opt;
 
 	assert(usage != NULL);
 	assert(termarg == NULL);
 	if (nextchar == 0) {
-		if (args == NULL)
+		if (args == NULL) {
 			return EOF;
+		}
 		assert(args->term != NULL);
 		arg = getstr(args->term);
-		if (*arg != '-')
+		if (*arg != '-') {
 			return EOF;
+		}
 		if (arg[1] == '-' && arg[2] == '\0') {
 			args = args->next;
 			return EOF;
@@ -78,14 +82,16 @@ extern int esopt(const char *options) {
 	return c;
 }
 
-extern Term *esoptarg(void) {
+extern Term
+*esoptarg(void) {
 	Term *t = termarg;
 	assert(t != NULL);
 	termarg = NULL;
 	return t;
 }
 
-extern List *esoptend(void) {
+extern List
+*esoptend(void) {
 	List *result = args;
 	args = NULL;
 	usage = NULL;

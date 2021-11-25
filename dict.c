@@ -18,7 +18,8 @@
  * TODO: Replace with either FNV1/FNV1a, XORshift, or XXHash
  */
 /* strhash2 -- the (probably too slow) haahr hash function */
-static unsigned long strhash2(const char *str1, const char *str2) {
+static unsigned long
+strhash2(const char *str1, const char *str2) {
 
 #define	ADVANCE() { \
 		if ((c = *s++) == '\0') {\
@@ -52,7 +53,8 @@ static unsigned long strhash2(const char *str1, const char *str2) {
 }
 
 /* strhash -- hash a single string */
-static unsigned long strhash(const char *str) {
+static unsigned long
+strhash(const char *str) {
 	return strhash2(str, NULL);
 }
 
@@ -74,7 +76,8 @@ struct Dict {
 };
 
 
-static Dict *mkdict0(int size) {
+static Dict
+*mkdict0(int size) {
 	size_t len = offsetof(Dict, table[size]);
 	Dict *dict = gcalloc(len, &DictTag);
 	memzero(dict, len);
@@ -83,7 +86,8 @@ static Dict *mkdict0(int size) {
 	return dict;
 }
 
-static void *DictCopy(void *op) {
+static void
+*DictCopy(void *op) {
 	Dict *dict = op;
 	size_t len = offsetof(Dict, table[dict->size]);
 	void *np = gcalloc(len, &DictTag);
@@ -91,7 +95,8 @@ static void *DictCopy(void *op) {
 	return np;
 }
 
-static size_t DictScan(void *p) {
+static size_t
+DictScan(void *p) {
 	Dict *dict = p;
 	int i;
 	for (i = 0; i < dict->size; i++) {
@@ -109,16 +114,20 @@ static size_t DictScan(void *p) {
 
 static char DEAD[] = "DEAD";
 
-static Assoc *get(Dict *dict, const char *name) {
+static Assoc
+*get(Dict *dict, const char *name) {
 	Assoc *ap;
 	unsigned long n = strhash(name), mask = dict->size - 1;
-	for (; (ap = &dict->table[n & mask])->name != NULL; n++)
-		if (ap->name != DEAD && streq(name, ap->name))
+	for (; (ap = &dict->table[n & mask])->name != NULL; n++) {
+		if (ap->name != DEAD && streq(name, ap->name)) {
 			return ap;
+		}
+	}
 	return NULL;
 }
 
-static Dict *put(Dict *dict, char *name, void *value) {
+static Dict
+*put(Dict *dict, char *name, void *value) {
 	unsigned long n, mask;
 	Assoc *ap;
 	assert(get(dict, name) == NULL);
@@ -154,7 +163,8 @@ static Dict *put(Dict *dict, char *name, void *value) {
 	return dict;
 }
 
-static void rm(Dict *dict, Assoc *ap) {
+static void
+rm(Dict *dict, Assoc *ap) {
 	unsigned long n, mask;
 	assert(dict->table <= ap && ap < &dict->table[dict->size]);
 
@@ -181,11 +191,13 @@ static void rm(Dict *dict, Assoc *ap) {
  * exported functions
  */
 
-extern Dict *mkdict(void) {
+extern Dict
+*mkdict(void) {
 	return mkdict0(INIT_DICT_SIZE);
 }
 
-extern void *dictget(Dict *dict, const char *name) {
+extern void
+*dictget(Dict *dict, const char *name) {
 	Assoc *ap = get(dict, name);
 	if (ap == NULL) {
 		return NULL;
@@ -193,7 +205,8 @@ extern void *dictget(Dict *dict, const char *name) {
 	return ap->value;
 }
 
-extern Dict *dictput(Dict *dict, char *name, void *value) {
+extern Dict
+*dictput(Dict *dict, char *name, void *value) {
 	Assoc *ap = get(dict, name);
 	if (value != NULL) {
 		if (ap == NULL) {
@@ -207,7 +220,8 @@ extern Dict *dictput(Dict *dict, char *name, void *value) {
 	return dict;
 }
 
-extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg) {
+extern void
+dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg) {
 	int i;
 	Ref(Dict *, dict, dp);
 	Ref(void *, argp, arg);
@@ -222,7 +236,8 @@ extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg
 
 /* TODO: Concatenate names before passing to strhash() */
 /* dictget2 -- look up the catenation of two names (such a hack!) */
-extern void *dictget2(Dict *dict, const char *name1, const char *name2) {
+extern void
+*dictget2(Dict *dict, const char *name1, const char *name2) {
 	Assoc *ap;
 	unsigned long n = strhash2(name1, name2), mask = dict->size - 1;
 	for (; (ap = &dict->table[n & mask])->name != NULL; n++) {

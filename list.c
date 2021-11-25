@@ -9,7 +9,8 @@
 
 DefineTag(List, static);
 
-extern List *mklist(Term *term, List *next) {
+extern List
+*mklist(Term *term, List *next) {
 	gcdisable();
 	assert(term != NULL);
 	Ref(List *, list, gcnew(List));
@@ -19,13 +20,15 @@ extern List *mklist(Term *term, List *next) {
 	RefReturn(list);
 }
 
-static void *ListCopy(void *op) {
+static void
+*ListCopy(void *op) {
 	void *np = gcnew(List);
 	memcpy(np, op, sizeof (List));
 	return np;
 }
 
-static size_t ListScan(void *p) {
+static size_t
+ListScan(void *p) {
 	List *list = p;
 	list->term = forward(list->term);
 	list->next = forward(list->next);
@@ -38,10 +41,12 @@ static size_t ListScan(void *p) {
  */
 
 /* reverse -- destructively reverse a list */
-extern List *reverse(List *list) {
+extern List
+*reverse(List *list) {
 	List *prev, *next;
-	if (list == NULL)
+	if (list == NULL) {
 		return NULL;
+	}
 	prev = NULL;
 	do {
 		next = list->next;
@@ -52,7 +57,8 @@ extern List *reverse(List *list) {
 }
 
 /* append -- merge two lists, non-destructively */
-extern List *append(List *head, List *tail) {
+extern List
+*append(List *head, List *tail) {
 	List *lp, **prevp;
 	Ref(List *, hp, head);
 	Ref(List *, tp, tail);
@@ -75,20 +81,24 @@ extern List *append(List *head, List *tail) {
 }
 
 /* listcopy -- make a copy of a list */
-extern List *listcopy(List *list) {
+extern List
+*listcopy(List *list) {
 	return append(list, NULL);
 }
 
 /* length -- lenth of a list */
-extern int length(List *list) {
+extern int
+length(List *list) {
 	int len = 0;
-	for (; list != NULL; list = list->next)
+	for (; list != NULL; list = list->next) {
 		++len;
+	}
 	return len;
 }
 
 /* listify -- turn an argc/argv vector into a list */
-extern List *listify(int argc, char **argv) {
+extern List
+*listify(int argc, char **argv) {
 	Ref(List *, list, NULL);
 	while (argc > 0) {
 		Term *term = mkstr(argv[--argc]);
@@ -98,18 +108,21 @@ extern List *listify(int argc, char **argv) {
 }
 
 /* nth -- return nth element of a list, indexed from 1 */
-extern Term *nth(List *list, int n) {
+extern Term
+*nth(List *list, int n) {
 	assert(n > 0);
 	for (; list != NULL; list = list->next) {
 		assert(list->term != NULL);
-		if (--n == 0)
+		if (--n == 0) {
 			return list->term;
+		}
 	}
 	return NULL;
 }
 
 /* sortlist */
-extern List *sortlist(List *list) {
+extern List
+*sortlist(List *list) {
 	if (length(list) > 1) {
 		Vector *v = vectorize(list);
 		sortvector(v);

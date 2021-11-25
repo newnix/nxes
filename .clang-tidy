@@ -1,0 +1,28 @@
+# vim: ft=yaml
+## NOTE: Documentation is available online here:
+# https://clang.llvm.org/extra/clang-tidy/checks/list.html
+---
+Checks: -*,
+  bugprone-*,
+  clang-analyzer-*,
+  readability-*,
+  cert-*,
+  performance-*,
+  portability-*,
+  modernize-*,
+  concurrency-*,
+  llvm-libc-*,
+  misc-*,
+  -readability-avoid-const-params-in-decls,
+  -readability-isolate-declaration
+WarningsAsErrors: -*,
+  clang-analyzer-*,
+  readability-*,
+  bugprone-*,
+  modernize-*,
+  -readability-redundant-control-flow
+  -readability-else-after-return
+CheckOptions:
+  ## XXX: This is the default, but I want to be explicit with this check
+  - key: 'readability-braces-around-statements.ShortStatementLines'
+    value: 0

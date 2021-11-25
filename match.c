@@ -23,65 +23,79 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 #define TAILQUOTE(q, n) ((q) == UNQUOTED ? UNQUOTED : ((q) + (n)))
 
 /* rangematch -- match a character against a character class */
-static int rangematch(const char *p, const char *q, char c) {
+static int
+rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
 	if (*p == '~' && !ISQUOTED(q, 0)) {
 		p++, q++;
 	    	neg = TRUE;
-	} else
+	} else {
 		neg = FALSE;
+	}
 	if (*p == ']' && !ISQUOTED(q, 0)) {
 		p++, q++;
 		matched = (c == ']');
 	}
 	for (; *p != ']' || ISQUOTED(q, 0); p++, q++) {
-		if (*p == '\0')
+		if (*p == '\0') {
 			return RANGE_ERROR;	/* bad syntax */
+		}
 		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
 			/* check for [..-..] but ignore [..-] */
-			if (c >= *p && c <= p[2])
+			if (c >= *p && c <= p[2]) {
 				matched = TRUE;
+			}
 			p += 2;
 			q += 2;
-		} else if (*p == c)
+		} else if (*p == c) {
 			matched = TRUE;
+		}
 	}
-	if (matched ^ neg)
+	if (matched ^ neg) {
 		return p - orig + 1; /* skip the right-bracket */
-	else
+	} else {
 		return RANGE_FAIL;
+	}
 }
 
 /* match -- match a single pattern against a single string. */
-extern Boolean match(const char *s, const char *p, const char *q) {
+extern Boolean
+match(const char *s, const char *p, const char *q) {
 	int i;
-	if (q == QUOTED)
+	if (q == QUOTED) {
 		return streq(s, p);
+	}
 	for (i = 0;;) {
 		int c = p[i++];
-		if (c == '\0')
+		if (c == '\0') {
 			return *s == '\0';
-		else if (q == UNQUOTED || q[i - 1] == 'r') {
+		} else if (q == UNQUOTED || q[i - 1] == 'r') {
 			switch (c) {
 			case '?':
-				if (*s++ == '\0')
+				if (*s++ == '\0') {
 					return FALSE;
+				}
 				break;
 			case '*':
-				while (p[i] == '*' && (q == UNQUOTED || q[i] == 'r'))	/* collapse multiple stars */
+				while (p[i] == '*' && (q == UNQUOTED || q[i] == 'r')) { /* collapse multiple stars */
 					i++;
-				if (p[i] == '\0') 	/* star at end of pattern? */
+				}
+				if (p[i] == '\0') { /* star at end of pattern? */
 					return TRUE;
-				while (*s != '\0')
-					if (match(s++, p + i, TAILQUOTE(q, i)))
+				}
+				while (*s != '\0') {
+					if (match(s++, p + i, TAILQUOTE(q, i))) {
 						return TRUE;
+					}
+				}
 				return FALSE;
 			case '[': {
 				int j;
-				if (*s == '\0')
+				if (*s == '\0') {
 					return FALSE;
+				}
 				switch (j = rangematch(p + i, TAILQUOTE(q, i), *s)) {
 				default:
 					i += j;
@@ -89,18 +103,21 @@ extern Boolean match(const char *s, const char *p, const char *q) {
 				case RANGE_FAIL:
 					return FALSE;
 				case RANGE_ERROR:
-					if (*s != '[')
+					if (*s != '[') {
 						return FALSE;
+					}
 				}
 				s++;
 				break;
 			}
 			default:
-				if (c != *s++)
+				if (c != *s++) {
 					return FALSE;
+				}
 			}
-		} else if (c != *s++)
+		} else if (c != *s++) {
 			return FALSE;
+		}
 	}
 }
 
@@ -113,10 +130,12 @@ extern Boolean match(const char *s, const char *p, const char *q) {
  *	() matches (), but otherwise null patterns match nothing.
  */
 
-extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
+extern Boolean
+listmatch(List *subject, List *pattern, StrList *quote) {
 	if (subject == NULL) {
-		if (pattern == NULL)
+		if (pattern == NULL) {
 			return TRUE;
+		}
 		Ref(List *, p, pattern);
 		Ref(StrList *, q, quote);
 		for (; p != NULL; p = p->next, q = q->next) {
@@ -125,12 +144,13 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
 			if (*pw != '\0' && qw != QUOTED) {
 				int i;
 				Boolean matched = TRUE;
-				for (i = 0; pw[i] != '\0'; i++)
+				for (i = 0; pw[i] != '\0'; i++) {
 					if (pw[i] != '*'
 					    || (qw != UNQUOTED && qw[i] != 'r')) {
 						matched = FALSE;
 						break;
 					}
+				}
 				if (matched) {
 					RefPop2(q, p);
 					return TRUE;
@@ -171,25 +191,27 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
  *			 single pattern, returning it backwards
  */
 
-static List *extractsinglematch(const char *subject, const char *pattern,
-				const char *quoting, List *result) {
+static List
+*extractsinglematch(const char *subject, const char *pattern, const char *quoting, List *result) {
 	int i;
 	const char *s;
 
 	if (!haswild(pattern, quoting) /* no wildcards, so no matches */
-	    || !match(subject, pattern, quoting))
+	    || !match(subject, pattern, quoting)) {
 		return NULL;
+	}
 
 	for (s = subject, i = 0; pattern[i] != '\0'; s++) {
-		if (ISQUOTED(quoting, i))
+		if (ISQUOTED(quoting, i)) {
 			i++;
-		else {
+		} else {
 			int c = pattern[i++];
 			switch (c) {
 			    case '*': {
 				const char *begin;
-				if (pattern[i] == '\0')
+				if (pattern[i] == '\0') {
 					return mklist(mkstr(gcdup(s)), result);
+				}
 				for (begin = s;; s++) {
 					const char *q = TAILQUOTE(quoting, i);
 					assert(*s != '\0');
@@ -231,7 +253,8 @@ static List *extractsinglematch(const char *subject, const char *pattern,
  *	subjects as the result.
  */
 
-extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
+extern List
+*extractmatches(List *subjects, List *patterns, StrList *quotes) {
 	List **prevp;
 	List *subject;
 	Ref(List *, result, NULL);
@@ -252,8 +275,9 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
 			if (match != NULL) {
 				/* match is returned backwards, so reverse it */
 				match = reverse(match);
-				for (*prevp = match; match != NULL; match = *prevp)
+				for (*prevp = match; match != NULL; match = *prevp) {
 					prevp = &match->next;
+				}
 				break;
 			}
 		}

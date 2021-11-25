@@ -10,14 +10,16 @@ List *exception = NULL;
 Push *pushlist = NULL;
 
 /* pophandler -- remove a handler */
-extern void pophandler(Handler *handler) {
+extern void
+pophandler(Handler *handler) {
 	assert(tophandler == handler);
 	assert(handler->rootlist == rootlist);
 	tophandler = handler->up;
 }
 
 /* throw -- raise an exception */
-extern noreturn throw(List *e) {
+extern noreturn
+throw(List *e) {
 	Handler *handler = tophandler;
 
 	assert(!gcisblocked());
@@ -32,8 +34,9 @@ extern noreturn throw(List *e) {
 	evaldepth = handler->evaldepth;
 
 #if ASSERTIONS
-	for (; rootlist != handler->rootlist; rootlist = rootlist->next)
+	for (; rootlist != handler->rootlist; rootlist = rootlist->next) {
 		assert(rootlist != NULL);
+	}
 #else
 	rootlist = handler->rootlist;
 #endif
@@ -42,8 +45,13 @@ extern noreturn throw(List *e) {
 	NOTREACHED;
 }
 
+/*
+ * TODO: Fix prototype declaration
+ * just need to ensure the difference is clearly understood first
+ */
 /* fail -- pass a user catchable error up the exception chain */
-extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
+extern noreturn
+fail VARARGS2(const char *, from, const char *, fmt) {
 	char *s;
 	va_list args;
 
@@ -55,20 +63,23 @@ extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
 	Ref(List *, e, mklist(mkstr("error"),
 			      mklist(mkstr((char *) from),
 				     mklist(mkstr(s), NULL))));
-	while (gcisblocked())
+	while (gcisblocked()) {
 		gcenable();
+	}
 	throw(e);
 	RefEnd(e);
 }
 
 /* newchildcatcher -- remove the current handler chain for a new child */
-extern void newchildcatcher(void) {
+extern void
+newchildcatcher(void) {
 	tophandler = roothandler;
 }
 
 #if DEBUG_EXCEPTIONS
 /* raised -- print exceptions as we climb the exception stack */
-extern List *raised(List *e) {
+extern
+List *raised(List *e) {
 	eprint("raised (sp @ %x) %L\n", &e, e, " ");
 	return e;
 }

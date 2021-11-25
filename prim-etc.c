@@ -1,12 +1,13 @@
 /* prim-etc.c -- miscellaneous primitives */
 
 #define	REQUIRE_PWD	1
+#define BASE10 10
 
 #include <stdint.h>
 #include "es.h"
 #include "prim.h"
 
-/* 
+/*
  * TODO: Consider adding support for handling floating point values
  * as well as integer values. This may require adding an actual type system
  * to the shell, but that may be feasible with some boxing techniques.
@@ -37,7 +38,7 @@ static List
 	return true;
 }
 
-/* 
+/*
  * Add some basic arithmetic operations,
  * no attempt to avoid over/under-flows is made at this time,
  * nor is any attempt made to validate inputs.
@@ -49,7 +50,7 @@ static List
 *prim_sum(List *list, Binding *binding, int evalflags) {
 	int64_t sum = 0;
 	for (; list != NULL; list = list->next) {
-		sum += (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		sum += (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	}
 	return mklist(mkstr(str("%ld", sum)), NULL);
 }
@@ -64,11 +65,11 @@ static List
 	int64_t sum = 0;
 
 	if (list != NULL) {
-		sum = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		sum = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 		if (list->next != NULL) {
 			list = list->next;
 			for (; list != NULL; list = list->next) {
-				sum -= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+				sum -= (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 			}
 		}
 	}
@@ -79,12 +80,12 @@ static List
 *prim_mul(List *list, Binding *binding, int evalflags) {
 	int64_t prod = 1;
 	for (; list != NULL; list = list->next) {
-		prod *= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		prod *= (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	}
 	return mklist(mkstr(str("%ld", prod)), NULL);
 }
 
-/* 
+/*
  * This operation requires some additional logic 
  * to ensure proper behaviour.
  */
@@ -94,14 +95,14 @@ static List
 	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&div", "Expected at least 2 integer arguments");
 	}
-	quot = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	quot = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10); // NOLINT(clang-analyzer-core.NullDereference)
 	for (list = list->next; list != NULL; list = list->next) {
-		quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		quot /= (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	}
 	return mklist(mkstr(str("%ld", quot)), NULL);
 }
 
-/* 
+/*
  * Modulus operation, can't think of a reason why it should
  * accept more than 2 arguments
  */
@@ -110,9 +111,9 @@ static List
 	uint64_t mod = 0;
 	int64_t a1, a2;
 	if ((list != NULL) && (length(list) == 2)) {
-		a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 		list = list->next;
-		a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+		a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 		mod = (uint64_t)(a1 % a2);
 	}
 	return mklist(mkstr(str("%ld", mod)), NULL);
@@ -130,9 +131,9 @@ static List
 	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&greaterthan", "Arity mismatch, requires 2 arguments");
 	}
-	a = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	a = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	list = list->next;
-	b = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	b = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	return((a > b) ? true : false);
 }
 
@@ -143,9 +144,9 @@ static List
 	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&lessthan", "Arity mismatch, requires 2 arguments");
 	}
-	a = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	a = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	list = list->next;
-	b = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	b = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	return((a < b) ? true : false);
 }
 
@@ -159,8 +160,8 @@ static List
 	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&band", "Requires 2 arguments");
 	}
-	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10); list = list->next;
-	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10); list = list->next;
+	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	return mklist(mkstr(str("%ld", a1 & a2)), NULL);
 }
 
@@ -171,8 +172,8 @@ static List
 	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&bxor", "Requires 2 arguments");
 	}
-	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10); list = list->next;
-	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10); list = list->next;
+	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	return mklist(mkstr(str("%ld", a1 ^ a2)), NULL);
 }
 
@@ -183,8 +184,8 @@ static List
 	if ((list == NULL) || (list->next == NULL)) {
 		fail("$&bor", "Requires 2 arguments");
 	}
-	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10); list = list->next;
-	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10); list = list->next;
+	a2 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	return mklist(mkstr(str("%ld", a1 | a2)), NULL);
 }
 
@@ -195,7 +196,7 @@ static List
 	if (list == NULL) {
 		fail("$&bnot", "Requires an argument");
 	}
-	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, 10);
+	a1 = (int64_t)strtol(getstr(list->term), (char **)NULL, BASE10);
 	return mklist(mkstr(str("%ld", ~a1)), NULL);
 }
 
@@ -229,7 +230,7 @@ static List
 	const char * const usage = ". [-einvx] file [arg ...]";
 
 	esoptbegin(list, "$&dot", usage);
-	while ((c = esopt("einvx")) != EOF)
+	while ((c = esopt("einvx")) != EOF) {
 		switch (c) {
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
@@ -237,17 +238,20 @@ static List
 		case 'v':	runflags |= run_echoinput;	break;
 		case 'x':	runflags |= run_printcmds;	break;
 		}
+	}
 
 	Ref(List *, result, NULL);
 	Ref(List *, lp, esoptend());
-	if (lp == NULL)
+	if (lp == NULL) {
 		fail("$&dot", "usage: %s", usage);
+	}
 
 	Ref(char *, file, getstr(lp->term));
 	lp = lp->next;
 	fd = eopen(file, oOpen);
-	if (fd == -1)
+	if (fd == -1) {
 		fail("$&dot", "%s: %s", file, esstrerror(errno));
+	}
 
 	varpush(&star, "*", lp);
 	varpush(&zero, "0", mklist(mkstr(file), NULL));
@@ -263,39 +267,43 @@ static List
 static List
 *prim_flatten(List *list, Binding *binding, int evalflags) {
 	char *sep;
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&flatten", "usage: %%flatten separator [args ...]");
+	}
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
 	lp = mklist(mkstr(str("%L", lp->next, sep)), NULL);
 	RefReturn(lp);
 }
 
-/* 
- * TODO: Since this apparently has duplicated logic, 
+/*
+ * TODO: Since this apparently has duplicated logic,
  * see if there's a way to fold the operation into a singe,
  * possibly inlined function.
  */
 static List
 *prim_whatis(List *list, Binding *binding, int evalflags) {
 	/* the logic in here is duplicated in eval() */
-	if (list == NULL || list->next != NULL)
+	if (list == NULL || list->next != NULL) {
 		fail("$&whatis", "usage: $&whatis program");
+	}
 	Ref(Term *, term, list->term);
 	if (getclosure(term) == NULL) {
 		List *fn;
 		Ref(char *, prog, getstr(term));
 		assert(prog != NULL);
 		fn = varlookup2("fn-", prog, binding);
-		if (fn != NULL)
+		if (fn != NULL) {
 			list = fn;
-		else {
+		} else {
 			if (isabsolute(prog)) {
 				char *error = checkexecutable(prog);
-				if (error != NULL)
+				if (error != NULL) {
 					fail("$&whatis", "%s: %s", prog, error);
-			} else
+				}
+			} else {
 				list = pathsearch(term);
+			}
 		}
 		RefEnd(prog);
 	}
@@ -306,8 +314,9 @@ static List
 static List
 *prim_split(List *list, Binding *binding, int evalflags) {
 	char *sep;
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&split", "usage: %%split separator [args ...]");
+	}
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
 	lp = fsplit(sep, lp->next, TRUE);
@@ -317,8 +326,9 @@ static List
 static List
 *prim_fsplit(List *list, Binding *binding, int evalflags) {
 	char *sep;
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&fsplit", "usage: %%fsplit separator [args ...]");
+	}
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
 	lp = fsplit(sep, lp->next, FALSE);
@@ -328,8 +338,9 @@ static List
 static List
 *prim_var(List *list, Binding *binding, int evalflags) {
 	Term *term;
-	if (list == NULL)
+	if (list == NULL) {
 		return NULL;
+	}
 	Ref(List *, rest, list->next);
 	Ref(char *, name, getstr(list->term));
 	Ref(List *, defn, varlookup(name, NULL));
@@ -364,20 +375,21 @@ static List
 	Ref(List *, lp, list);
 	if (lp != NULL) {
 		prompt1 = getstr(lp->term);
-		if ((lp = lp->next) != NULL)
+		if ((lp = lp->next) != NULL) {
 			prompt2 = getstr(lp->term);
+		}
 	}
 	RefEnd(lp);
 	tree = parse(prompt1, prompt2);
 	result = (tree == NULL)
 		   ? NULL
 		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
-			    NULL);
+		     NULL);
 	RefEnd2(prompt2, prompt1);
 	return result;
 }
 
-/* 
+/*
  * XXX: Is this function really necessary? It appears to 
  * simply be adding a flag to eval()
  */
@@ -404,8 +416,9 @@ static List
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);
 			if (cmd != NULL) {
-				if (dispatch != NULL)
+				if (dispatch != NULL) {
 					cmd = append(dispatch, cmd);
+				}
 				result = eval(cmd, NULL, evalflags);
 				SIGCHK();
 			}
@@ -413,11 +426,13 @@ static List
 
 	CatchException (e)
 
-		if (!termeq(e->term, "eof"))
+		if (!termeq(e->term, "eof")) {
 			throw(e);
+		}
 		RefEnd(dispatch);
-		if (result == true)
+		if (result == true) {
 			result = true;
+		}
 		RefReturn(result);
 
 	EndExceptionHandler
@@ -429,13 +444,20 @@ static List
 	return true;
 }
 
+/*
+ * FIXME: Use the thread-safe function getpwnam_r(3)
+ * provided it's deemed necessary to use the facilities of
+ * getpwnam(3) at all for this function
+ */
 static List
 *prim_home(List *list, Binding *binding, int evalflags) {
 	struct passwd *pw;
-	if (list == NULL)
+	if (list == NULL) {
 		return varlookup("home", NULL);
-	if (list->next != NULL)
+	}
+	if (list->next != NULL) {
 		fail("$&home", "usage: %%home [user]");
+	}
 	pw = getpwnam(getstr(list->term));
 	return (pw == NULL) ? NULL : mklist(mkstr(gcdup(pw->pw_dir)), NULL);
 }
@@ -457,12 +479,14 @@ static List
 
 static List
 *prim_noreturn(List *list, Binding *binding, int evalflags) {
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&noreturn", "usage: $&noreturn lambda args ...");
+	}
 	Ref(List *, lp, list);
 	Ref(Closure *, closure, getclosure(lp->term));
-	if (closure == NULL || closure->tree->kind != nLambda)
+	if (closure == NULL || closure->tree->kind != nLambda) {
 		fail("$&noreturn", "$&noreturn: %E is not a lambda", lp->term);
+	}
 	Ref(Tree *, tree, closure->tree);
 	Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, closure->binding));
 	lp = walk(tree->u[1].p, context, evalflags);
@@ -478,14 +502,17 @@ static List
 		maxevaldepth = MAXmaxevaldepth;
 		return NULL;
 	}
-	if (list->next != NULL)
+	if (list->next != NULL) {
 		fail("$&setmaxevaldepth", "usage: $&setmaxevaldepth [limit]");
+	}
 	Ref(List *, lp, list);
 	n = strtol(getstr(lp->term), &s, 0);
-	if (n < 0 || (s != NULL && *s != '\0'))
+	if (n < 0 || (s != NULL && *s != '\0')) {
 		fail("$&setmaxevaldepth", "max-eval-depth must be set to a positive integer");
-	if (n < MINmaxevaldepth)
+	}
+	if (n < MINmaxevaldepth) {
 		n = (n == 0) ? MAXmaxevaldepth : MINmaxevaldepth;
+	}
 	maxevaldepth = n;
 	RefReturn(lp);
 }

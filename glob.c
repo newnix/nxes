@@ -9,33 +9,42 @@
 char QUOTED[] = "QUOTED", UNQUOTED[] = "RAW";
 
 /* hastilde -- true iff the first character is a ~ and it is not quoted */
-static Boolean hastilde(const char *s, const char *q) {
+static Boolean
+hastilde(const char *s, const char *q) {
 	return *s == '~' && (q == UNQUOTED || *q == 'r');
 }
 
 /* haswild -- true iff some unquoted character is a wildcard character */
-extern Boolean haswild(const char *s, const char *q) {
-	if (q == QUOTED)
+extern Boolean
+haswild(const char *s, const char *q) {
+	if (q == QUOTED) {
 		return FALSE;
-	if (q == UNQUOTED)
+	}
+	if (q == UNQUOTED) {
 		for (;;) {
 			int c = *s++;
-			if (c == '\0')
+			if (c == '\0') {
 				return FALSE;
-			if (c == '*' || c == '?' || c == '[')
+			}
+			if (c == '*' || c == '?' || c == '[') {
 				return TRUE;
+			}
 		}
+	}
 	for (;;) {
 		int c = *s++, r = *q++;
-		if (c == '\0')
+		if (c == '\0') {
 			return FALSE;
-		if ((c == '*' || c == '?' || c == '[') && (r == 'r'))
+		}
+		if ((c == '*' || c == '?' || c == '[') && (r == 'r')) {
 			return TRUE;
+		}
 	}
 }
 
 /* ishiddenfile -- return true if the file is a dot file to be hidden */
-static int ishiddenfile(const char *s) {
+static int
+ishiddenfile(const char *s) {
 #if SHOW_DOT_FILES
 	return *s == '.' && (!s[1] || (s[1] == '.' && !s[2]));
 #else
@@ -44,7 +53,8 @@ static int ishiddenfile(const char *s) {
 }
 
 /* dirmatch -- match a pattern against the contents of directory */
-static List *dirmatch(const char *prefix, const char *dirname, const char *pattern, const char *quote) {
+static List
+*dirmatch(const char *prefix, const char *dirname, const char *pattern, const char *quote) {
 	List *list, **prevp;
 	static DIR *dirp;
 	static Dirent *dp;
@@ -55,22 +65,25 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 	 * is necessary (sigh);  the check is done here instead of with the
 	 * opendir to handle a trailing slash.
 	 */
-	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR)
-		return NULL;	
+	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR) {
+		return NULL;
+	}
 
 	if (!haswild(pattern, quote)) {
 		char *name = str("%s%s", prefix, pattern);
-		if (lstat(name, &s) == -1)
+		if (lstat(name, &s) == -1) {
 			return NULL;
+		}
 		return mklist(mkstr(name), NULL);
 	}
 
 	assert(gcisblocked());
 
 	dirp = opendir(dirname);
-	if (dirp == NULL)
-		return NULL;	
-	for (list = NULL, prevp = &list; (dp = readdir(dirp)) != NULL;)
+	if (dirp == NULL) {
+		return NULL;
+	}
+	for (list = NULL, prevp = &list; (dp = readdir(dirp)) != NULL;) {
 		if (match(dp->d_name, pattern, quote)
 		    && (!ishiddenfile(dp->d_name) || *pattern == '.')) {
 			List *lp = mklist(mkstr(str("%s%s",
@@ -79,12 +92,14 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 			*prevp = lp;
 			prevp = &lp->next;
 		}
+	}
 	closedir(dirp);
 	return list;
 }
 
 /* listglob -- glob a directory plus a filename pattern into a list of names */
-static List *listglob(List *list, char *pattern, char *quote, size_t slashcount) {
+static List
+*listglob(List *list, char *pattern, char *quote, size_t slashcount) {
 	List *result, **prevp;
 
 	for (result = NULL, prevp = &result; list != NULL; list = list->next) {
@@ -107,14 +122,16 @@ static List *listglob(List *list, char *pattern, char *quote, size_t slashcount)
 		prefix[dirlen + slashcount] = '\0';
 
 		*prevp = dirmatch(prefix, dir, pattern, quote);
-		while (*prevp != NULL)
+		while (*prevp != NULL) {
 			prevp = &(*prevp)->next;
+		}
 	}
 	return result;
 }
 
 /* glob1 -- glob pattern path against the file system */
-static List *glob1(const char *pattern, const char *quote) {
+static List
+*glob1(const char *pattern, const char *quote) {
 	const char *s, *q;
 	char *d, *p, *qd, *qp;
 	size_t psize;
@@ -139,12 +156,15 @@ static List *glob1(const char *pattern, const char *quote) {
 	q = (quote == UNQUOTED) ? raw : quote;
 
 	s = pattern;
-	if (*s == '/')
-		while (*s == '/')
+	if (*s == '/') {
+		while (*s == '/') {
 			*d++ = *s++, *qd++ = *q++;
-	else
-		while (*s != '/' && *s != '\0')
+		}
+	} else {
+		while (*s != '/' && *s != '\0') {
 			*d++ = *s++, *qd++ = *q++; /* get first directory component */
+		}
+	}
 	*d = '\0';
 
 	/*
@@ -152,8 +172,9 @@ static List *glob1(const char *pattern, const char *quote) {
 	 * Remember that w cannot consist of slashes alone (the other way *s could be
 	 * zero) since doglob gets called iff there's a metacharacter to be matched
 	 */
-	if (*s == '\0')
+	if (*s == '\0') {
 		return dirmatch("", ".", dir, qdir);
+	}
 
 	matched = (*pattern == '/')
 			? mklist(mkstr(dir), NULL)
@@ -161,10 +182,12 @@ static List *glob1(const char *pattern, const char *quote) {
 	do {
 		size_t slashcount;
 		SIGCHK();
-		for (slashcount = 0; *s == '/'; s++, q++)
+		for (slashcount = 0; *s == '/'; s++, q++) {
 			slashcount++; /* skip slashes */
-		for (p = pat, qp = qpat; *s != '/' && *s != '\0';)
+		}
+		for (p = pat, qp = qpat; *s != '/' && *s != '\0';) {
 			*p++ = *s++, *qp++ = *q++; /* get pat */
+		}
 		*p = '\0';
 		matched = listglob(matched, pat, qpat, slashcount);
 	} while (*s != '\0' && matched != NULL);
@@ -173,7 +196,8 @@ static List *glob1(const char *pattern, const char *quote) {
 }
 
 /* glob0 -- glob a list, (destructively) passing through entries we don't care about */
-static List *glob0(List *list, StrList *quote) {
+static List
+*glob0(List *list, StrList *quote) {
 	List *result, **prevp, *expand1;
 	
 	for (result = NULL, prevp = &result; list != NULL; list = list->next, quote = quote->next) {
@@ -187,15 +211,17 @@ static List *glob0(List *list, StrList *quote) {
 			prevp = &list->next;
 		} else {
 			*prevp = sortlist(expand1);
-			while (*prevp != NULL)
+			while (*prevp != NULL) {
 				prevp = &(*prevp)->next;
+			}
 		}
 	}
 	return result;
 }
 
 /* expandhome -- do tilde expansion by calling fn %home */
-static char *expandhome(char *s, StrList *qp) {
+static char
+*expandhome(char *s, StrList *qp) {
 	int c;
 	size_t slash;
 	List *fn = varlookup("fn-%home", NULL);
@@ -203,25 +229,29 @@ static char *expandhome(char *s, StrList *qp) {
 	assert(*s == '~');
 	assert(qp->str == UNQUOTED || *qp->str == 'r');
 
-	if (fn == NULL)
+	if (fn == NULL) {
 		return s;
+	}
 
-	for (slash = 1; (c = s[slash]) != '/' && c != '\0'; slash++)
+	for (slash = 1; (c = s[slash]) != '/' && c != '\0'; slash++) {
 		;
+	}
 
 	Ref(char *, string, s);
 	Ref(StrList *, quote, qp);
 	Ref(List *, list, NULL);
 	RefAdd(fn);
-	if (slash > 1)
+	if (slash > 1) {
 		list = mklist(mkstr(gcndup(s + 1, slash - 1)), NULL);
+	}
 	RefRemove(fn);
 
 	list = eval(append(fn, list), NULL, 0);
 
 	if (list != NULL) {
-		if (list->next != NULL)
+		if (list->next != NULL) {
 			fail("es:expandhome", "%%home returned more than one value");
+		}
 		Ref(char *, home, getstr(list->term));
 		if (c == '\0') {
 			string = home;
@@ -242,9 +272,9 @@ static char *expandhome(char *s, StrList *qp) {
 				memset(q, 'q', homelen);
 				memset(&q[homelen], 'r', pathlen - slash);
 				q[len] = '\0';
-			} else if (strchr(q, 'r') == NULL)
+			} else if (strchr(q, 'r') == NULL) {
 				q = QUOTED;
-			else {
+			} else {
 				q = gcalloc(len + 1, &StringTag);
 				memset(q, 'q', homelen);
 				memcpy(&q[homelen], &quote->str[slash], pathlen - slash);
@@ -259,12 +289,13 @@ static char *expandhome(char *s, StrList *qp) {
 }
 
 /* glob -- globbing prepass (glob if we need to, and dispatch for tilde expansion) */
-extern List *glob(List *list, StrList *quote) {
+extern List
+*glob(List *list, StrList *quote) {
 	List *lp;
 	StrList *qp;
 	Boolean doglobbing = FALSE;
 
-	for (lp = list, qp = quote; lp != NULL; lp = lp->next, qp = qp->next)
+	for (lp = list, qp = quote; lp != NULL; lp = lp->next, qp = qp->next) {
 		if (qp->str != QUOTED) {
 			assert(lp->term != NULL);
 			assert(!isclosure(lp->term));
@@ -283,13 +314,16 @@ extern List *glob(List *list, StrList *quote) {
 				quote = q0;
 				RefEnd4(qr, q0, lr, l0);
 			}
-			if (haswild(str, qp->str))
+			if (haswild(str, qp->str)) {
 				doglobbing = TRUE;
+			}
 			RefEnd(str);
 		}
+	}
 
-	if (!doglobbing)
+	if (!doglobbing) {
 		return list;
+	}
 	gcdisable();
 	list = glob0(list, quote);
 	Ref(List *, result, list);

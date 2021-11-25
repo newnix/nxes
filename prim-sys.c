@@ -27,8 +27,9 @@
 static List
 *prim_newpgrp(List *list, Binding *binding, int evalflags) {
 	int pid;
-	if (list != NULL)
+	if (list != NULL) {
 		fail("$&newpgrp", "usage: newpgrp");
+	}
 	pid = getpid();
 	setpgrp(pid, pid);
 #ifdef TIOCSPGRP
@@ -63,8 +64,9 @@ static List
 *prim_fork(List *list, Binding *binding, int evalflags) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
-	if (pid == 0)
+	if (pid == 0) {
 		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+	}
 	status = ewaitfor(pid);
 	SIGCHK();
 	printstatus(0, status);
@@ -74,8 +76,9 @@ static List
 static List
 *prim_run(List *list, Binding *binding, int evalflags) {
 	char *file;
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&run", "usage: %%run file argv0 argv1 ...");
+	}
 	Ref(List *, lp, list);
 	file = getstr(lp->term);
 	lp = forkexec(file, lp->next, (evalflags & eval_inchild) != 0);
@@ -85,20 +88,23 @@ static List
 static List
 *prim_umask(List *list, Binding *binding, int evalflags) {
 	if (list == NULL) {
-		int mask = umask(0);
+		/* XXX: Might need to convert back to an int temporarily if print() doesn't like mode_t and the like */
+		mode_t mask = umask(0);
 		umask(mask);
 		print("%04o\n", mask);
 		return true;
 	}
 	if (list->next == NULL) {
-		int mask;
+		mode_t mask;
 		char *s, *t;
 		s = getstr(list->term);
 		mask = strtol(s, &t, 8);
-		if ((t != NULL && *t != '\0') || ((unsigned) mask) > 07777)
+		if ((t != NULL && *t != '\0') || ((unsigned) mask) > 07777) {
 			fail("$&umask", "bad umask: %s", s);
-		if (umask(mask) == (mode_t)(~0))
+		}
+		if (umask(mask) == (mode_t)(~0)) {
 			fail("$&umask", "umask %04o: %s", mask, esstrerror(errno));
+		}
 		return true;
 	}
 	fail("$&umask", "usage: umask [mask]");
@@ -115,20 +121,23 @@ static List
 static List
 *prim_cd(List *list, Binding *binding, int evalflags) {
 	char *dir;
-	if (list == NULL || list->next != NULL)
+	if (list == NULL || list->next != NULL) {
 		fail("$&cd", "usage: $&cd directory");
+	}
 	dir = getstr(list->term);
-	if (chdir(dir) == -1)
+	if (chdir(dir) == -1) {
 		fail("$&cd", "chdir %s: %s", dir, esstrerror(errno));
+	}
 	return true;
 }
 
 static List
 *prim_setsignals(List *list, Binding *binding, int evalflags) {
 	int i;
-	Sigeffect effects[NSIG];
-	for (i = 0; i < NSIG; i++)
+	Sigeffect effects[NSIG]; /* XXX: Unused? */
+	for (i = 0; i < NSIG; i++) {
 		effects[i] = sig_default;
+	}
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next) {
 		int sig;
@@ -140,8 +149,9 @@ static List
 		case '.':	effect = sig_special;	s++; break;
 		}
 		sig = signumber(s);
-		if (sig < 0)
+		if (sig < 0) {
 			fail("$&setsignals", "unknown signal: %s", s);
+		}
 		effects[sig] = effect;
 	}
 	RefEnd(lp);
@@ -213,57 +223,68 @@ static const Limit limits[] = {
 	{ NULL, 0, NULL }
 };
 
-static void printlimit(const Limit *limit, Boolean hard) {
+static void
+printlimit(const Limit *limit, Boolean hard) {
 	struct rlimit rlim;
 	LIMIT_T lim;
 	getrlimit(limit->flag, &rlim);
-	if (hard)
+	if (hard) {
 		lim = rlim.rlim_max;
-	else
+	} else {
 		lim = rlim.rlim_cur;
-	if (lim == (LIMIT_T) RLIM_INFINITY)
+	}
+	if (lim == (LIMIT_T) RLIM_INFINITY) {
 		print("%-8s\tunlimited\n", limit->name);
-	else {
+	} else {
 		const Suffix *suf;
 
-		for (suf = limit->suffix; suf != NULL; suf = suf->next)
+		for (suf = limit->suffix; suf != NULL; suf = suf->next) {
 			if (lim % suf->amount == 0 && (lim != 0 || suf->amount > 1)) {
 				lim /= suf->amount;
 				break;
 			}
+		}
 		print("%-8s\t%d%s\n", limit->name, (int)lim, (suf == NULL || lim == 0) ? "" : suf->name);
 	}
 }
 
-static LIMIT_T parselimit(const Limit *limit, char *s) {
+static LIMIT_T
+parselimit(const Limit *limit, char *s) {
 	LIMIT_T lim;
 	char *t;
 	const Suffix *suf = limit->suffix;
-	if (streq(s, "unlimited"))
+	if (streq(s, "unlimited")) {
 		return RLIM_INFINITY;
-	if (!isdigit(*s))
+	}
+	if (!isdigit(*s)) {
 		fail("$&limit", "%s: bad limit value", s);
+	}
 	if (suf == timesuf && (t = strchr(s, ':')) != NULL) {
 		char *u;
 		lim = strtol(s, &u, 0) * 60;
-		if (u != t)
+		if (u != t) {
 			fail("$&limit", "%s %s: bad limit value", limit->name, s);
+		}
 		lim += strtol(u + 1, &t, 0);
-		if (t != NULL && *t == ':')
+		if (t != NULL && *t == ':') {
 			lim = lim * 60 + strtol(t + 1, &t, 0);
-		if (t != NULL && *t != '\0')
+		}
+		if (t != NULL && *t != '\0') {
 			fail("$&limit", "%s %s: bad limit value", limit->name, s);
+		}
 	} else {
 		lim = strtol(s, &t, 0);
-		if (t != NULL && *t != '\0')
+		if (t != NULL && *t != '\0') {
 			for (;; suf = suf->next) {
-				if (suf == NULL)
+				if (suf == NULL) {
 					fail("$&limit", "%s %s: bad limit value", limit->name, s);
+				}
 				if (streq(suf->name, t)) {
 					lim *= suf->amount;
 					break;
 				}
 			}
+		}
 	}
 	return lim;
 }
@@ -279,32 +300,38 @@ static List
 		lp = lp->next;
 	}
 
-	if (lp == NULL)
-		for (; lim->name != NULL; lim++)
+	if (lp == NULL) {
+		for (; lim->name != NULL; lim++) {
 			printlimit(lim, hard);
-	else {
+		}
+	} else {
 		char *name = getstr(lp->term);
 		for (;; lim++) {
-			if (lim->name == NULL)
+			if (lim->name == NULL) {
 				fail("$&limit", "%s: no such limit", name);
-			if (streq(name, lim->name))
+			}
+			if (streq(name, lim->name)) {
 				break;
+			}
 		}
 		lp = lp->next;
-		if (lp == NULL)
+		if (lp == NULL) {
 			printlimit(lim, hard);
-		else {
+		} else {
 			LIMIT_T n;
 			struct rlimit rlim;
 			getrlimit(lim->flag, &rlim);
-			if ((n = parselimit(lim, getstr(lp->term))) < 0)
+			if ((n = parselimit(lim, getstr(lp->term))) < 0) {
 				fail("$&limit", "%s: bad limit value", getstr(lp->term));
-			if (hard)
+			}
+			if (hard) {
 				rlim.rlim_max = n;
-			else
+			} else {
 				rlim.rlim_cur = n;
-			if (setrlimit(lim->flag, &rlim) == -1)
+			}
+			if (setrlimit(lim->flag, &rlim) == -1) {
 				fail("$&limit", "setrlimit: %s", esstrerror(errno));
+			}
 		}
 	}
 	RefEnd(lp);
@@ -327,8 +354,9 @@ static List
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
-	if (pid == 0)
+	if (pid == 0) {
 		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+	}
 	status = ewait(pid, FALSE, &r);
 	t1 = time(NULL);
 	SIGCHK();
@@ -345,6 +373,9 @@ static List
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
 
+/*
+ * FIXME: Should not care about wait3(2) anymore, use waitpid(2) instead
+ */
 #else	/* !HAVE_WAIT3 */
 
 	int pid, status;

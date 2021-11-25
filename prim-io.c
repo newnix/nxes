@@ -6,16 +6,19 @@
 
 static const char *caller;
 
-static int getnumber(const char *s) {
+static int
+getnumber(const char *s) {
 	char *end;
-	int result = strtol(s, &end, 0);
+	int result = (int)strtol(s, &end, 0);
 
-	if (*end != '\0' || result < 0)
+	if (*end != '\0' || result < 0) {
 		fail(caller, "bad number: %s", s);
+	}
 	return result;
 }
 
-static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags) {
+static List
+*redir(List *(*rop)(int *fd, List *list), List *list, int evalflags) {
 	int destfd, srcfd;
 	volatile int inparent = (evalflags & eval_inchild) == 0;
 	volatile int ticket = UNREGISTERED;
@@ -41,7 +44,8 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 
 #define	REDIR(name)	static List *CONCAT(redir_,name)(int *srcfdp, List *list)
 
-static noreturn argcount(const char *s) {
+static noreturn
+argcount(const char *s) {
 	fail(caller, "argument count: usage: %s", s);
 }
 
@@ -68,8 +72,9 @@ REDIR(openfile) {
 	mode = getstr(lp->term);
 	lp = lp->next;
 	for (i = 0;; i++) {
-		if (modes[i].name == NULL)
+		if (modes[i].name == NULL) {
 			fail("$&openfile", "bad %%openfile mode: %s", mode);
+		}
 		if (streq(mode, modes[i].name)) {
 			kind = modes[i].kind;
 			break;
@@ -79,8 +84,9 @@ REDIR(openfile) {
 	name = getstr(lp->term);
 	lp = lp->next;
 	fd = eopen(name, kind);
-	if (fd == -1)
+	if (fd == -1) {
 		fail("$&openfile", "%s: %s", name, esstrerror(errno));
+	}
 	*srcfdp = fd;
 	RefReturn(lp);
 }
@@ -89,8 +95,9 @@ static List
 *prim_openfile(List *list, Binding *binding, int evalflags) {
 	List *lp;
 	caller = "$&openfile";
-	if (length(list) != 4)
+	if (length(list) != 4) {
 		argcount("%openfile mode fd file cmd");
+	}
 	/* transpose the first two elements */
 	lp = list->next;
 	list->next = lp->next;
@@ -103,8 +110,9 @@ REDIR(dup) {
 	assert(length(list) == 2);
 	Ref(List *, lp, list);
 	fd = dup(fdmap(getnumber(getstr(lp->term))));
-	if (fd == -1)
+	if (fd == -1) {
 		fail("$&dup", "dup: %s", esstrerror(errno));
+	}
 	*srcfdp = fd;
 	lp = lp->next;
 	RefReturn(lp);
@@ -113,8 +121,9 @@ REDIR(dup) {
 static List
 *prim_dup(List *list, Binding *binding, int evalflags) {
 	caller = "$&dup";
-	if (length(list) != 3)
+	if (length(list) != 3) {
 		argcount("%dup newfd oldfd cmd");
+	}
 	return redir(redir_dup, list, evalflags);
 }
 
@@ -126,8 +135,9 @@ REDIR(close) {
 static List
 *prim_close(List *list, Binding *binding, int evalflags) {
 	caller = "$&close";
-	if (length(list) != 2)
+	if (length(list) != 2) {
 		argcount("%close fd cmd");
+	}
 	return redir(redir_close, list, evalflags);
 }
 
@@ -135,28 +145,32 @@ static List
 static int pipefork(int p[2], int *extra) {
 	volatile int pid = 0;
 
-	if (pipe(p) == -1)
+	if (pipe(p) == -1) {
 		fail(caller, "pipe: %s", esstrerror(errno));
+	}
 
 	registerfd(&p[0], FALSE);
 	registerfd(&p[1], FALSE);
-	if (extra != NULL)
+	if (extra != NULL) {
 		registerfd(extra, FALSE);
+	}
 
 	ExceptionHandler
 		pid = efork(TRUE, FALSE);
 	CatchExceptionIf (pid != 0, e)
 		unregisterfd(&p[0]);
 		unregisterfd(&p[1]);
-		if (extra != NULL)
+		if (extra != NULL) {
 			unregisterfd(extra);
+		}
 		throw(e);
 	EndExceptionHandler;
 
 	unregisterfd(&p[0]);
 	unregisterfd(&p[1]);
-	if (extra != NULL)
+	if (extra != NULL) {
 		unregisterfd(extra);
+	}
 	return pid;
 }
 
@@ -165,8 +179,9 @@ REDIR(here) {
 	List *doc, *tail, **tailp;
 
 	assert(list != NULL);
-	for (tailp = &list; (tail = *tailp)->next != NULL; tailp = &tail->next)
+	for (tailp = &list; (tail = *tailp)->next != NULL; tailp = &tail->next) {
 		;
+	}
 	doc = (list == tail) ? NULL : list;
 	*tailp = NULL;
 
@@ -184,8 +199,9 @@ REDIR(here) {
 static List
 *prim_here(List *list, Binding *binding, int evalflags) {
 	caller = "$&here";
-	if (length(list) < 2)
+	if (length(list) < 2) {
 		argcount("%here fd [word ...] cmd");
+	}
 	return redir(redir_here, list, evalflags);
 }
 
@@ -196,8 +212,9 @@ static List
 
 	caller = "$&pipe";
 	n = length(list);
-	if ((n % 3) != 1)
+	if ((n % 3) != 1) {
 		fail("$&pipe", "usage: pipe cmd [ outfd infd cmd ] ...");
+	}
 	n = (n + 2) / 3;
 	if (n > pidmax) {
 		pids = erealloc(pids, n * sizeof *pids);
@@ -228,8 +245,9 @@ static List
 		}
 		pids[n++] = pid;
 		close(inpipe);
-		if (list->next == NULL)
+		if (list->next == NULL) {
 			break;
+		}
 		list = list->next->next;
 		infd = getnumber(getstr(list->term));
 		inpipe = p[0];
@@ -244,8 +262,9 @@ static List
 		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
 	} while (0 < n);
-	if (evalflags & eval_inchild)
+	if (evalflags & eval_inchild) {
 		exit(exitstatus(result));
+	}
 	RefReturn(result);
 }
 
@@ -256,8 +275,9 @@ static List
 	Push push;
 
 	caller = "$&readfrom";
-	if (length(list) != 3)
+	if (length(list) != 3) {
 		argcount("%readfrom var input cmd");
+	}
 	Ref(List *, lp, list);
 	Ref(char *, var, getstr(lp->term));
 	lp = lp->next;
@@ -298,8 +318,9 @@ static List
 	Handler h;
 
 	caller = "$&writeto";
-	if (length(list) != 3)
+	if (length(list) != 3) {
 		argcount("%writeto var output cmd");
+	}
 	Ref(List *, lp, list);
 	Ref(char *, var, getstr(lp->term));
 	lp = lp->next;
@@ -337,18 +358,21 @@ static List
 
 #define	BUFSIZE	4096
 
-static List *bqinput(const char *sep, int fd) {
+static List
+*bqinput(const char *sep, int fd) {
 	long n;
 	char in[BUFSIZE];
 	startsplit(sep, TRUE);
 
 restart:
-	while ((n = eread(fd, in, sizeof in)) > 0)
+	while ((n = eread(fd, in, sizeof in)) > 0) {
 		splitstring(in, n, FALSE);
+	}
 	SIGCHK();
 	if (n == -1) {
-		if (errno == EINTR)
+		if (errno == EINTR) {
 			goto restart;
+		}
 		close(fd);
 		fail("$&backquote", "backquote read: %s", esstrerror(errno));
 	}
@@ -360,8 +384,9 @@ static List
 	int pid, p[2], status;
 	
 	caller = "$&backquote";
-	if (list == NULL)
+	if (list == NULL) {
 		fail(caller, "usage: backquote separator command [args ...]");
+	}
 
 	Ref(List *, lp, list);
 	Ref(char *, sep, getstr(lp->term));
@@ -395,15 +420,17 @@ static List
 }
 
 /* read1 -- read one byte */
-static int read1(int fd) {
+static int
+read1(int fd) {
 	int nread;
 	unsigned char buf;
 	do {
 		nread = eread(fd, (char *) &buf, 1);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
-	if (nread == -1)
+	if (nread == -1) {
 		fail("$&read", esstrerror(errno));
+	}
 	return nread == 0 ? EOF : buf;
 }
 
@@ -413,12 +440,14 @@ static List
 	int fd = fdmap(0);
 
 	static Buffer *buffer = NULL;
-	if (buffer != NULL)
+	if (buffer != NULL) {
 		freebuffer(buffer);
+	}
 	buffer = openbuffer(0);
 
-	while ((c = read1(fd)) != EOF && c != '\n')
+	while ((c = read1(fd)) != EOF && c != '\n') {
 		buffer = bufputc(buffer, c);
+	} /* XXX: I think this is the correct end of the loop's scope... */
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);

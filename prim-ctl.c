@@ -3,12 +3,17 @@
 #include "es.h"
 #include "prim.h"
 
+/*
+ * TODO: Look into removing unused parameters from these
+ * function definitions.
+ */
 static List
 *prim_seq(List *list, Binding *binding, int evalflags) {
 	Ref(List *, result, true);
 	Ref(List *, lp, list);
-	for (; lp != NULL; lp = lp->next)
+	for (; lp != NULL; lp = lp->next) {
 		result = eval1(lp->term, evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
+	}
 	RefEnd(lp);
 	RefReturn(result);
 }
@@ -36,16 +41,18 @@ static List
 static List
 *prim_forever(List *list, Binding *binding, int evalflags) {
 	Ref(List *, body, list);
-	for (;;)
+	for (;;) {
 		list = eval(body, NULL, evalflags & eval_exitonfalse);
+	}
 	RefEnd(body);
 	return list;
 }
 
 static List
 *prim_throw(List *list, Binding *binding, int evalflags) {
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&throw", "usage: throw exception [args ...]");
+	}
 	throw(list);
 	NOTREACHED;
 }
@@ -54,8 +61,9 @@ static List
 *prim_catch(List *list, Binding *binding, int evalflags) {
 	Atomic retry;
 
-	if (list == NULL)
+	if (list == NULL) {
 		fail("$&catch", "usage: catch catcher body");
+	}
 
 	Ref(List *, result, NULL);
 	Ref(List *, lp, list);

@@ -6,7 +6,8 @@
 
 DefineTag(Term, static);
 
-extern Term *mkterm(char *str, Closure *closure) {
+extern Term
+*mkterm(char *str, Closure *closure) {
 	gcdisable();
 	Ref(Term *, term, gcnew(Term));
 	term->str = str;
@@ -15,7 +16,8 @@ extern Term *mkterm(char *str, Closure *closure) {
 	RefReturn(term);
 }
 
-extern Term *mkstr(char *str) {
+extern Term
+*mkstr(char *str) {
 	Term *term;
 	Ref(char *, string, str);
 	term = gcnew(Term);
@@ -25,7 +27,8 @@ extern Term *mkstr(char *str) {
         return term;
 }
 
-extern Closure *getclosure(Term *term) {
+extern Closure
+*getclosure(Term *term) {
 	if (term->closure == NULL) {
 		char *s = term->str;
 		assert(s != NULL);
@@ -49,12 +52,14 @@ extern Closure *getclosure(Term *term) {
 	return term->closure;
 }
 
-extern char *getstr(Term *term) {
+extern char
+*getstr(Term *term) {
 	char *s = term->str;
 	Closure *closure = term->closure;
 	assert((s == NULL) != (closure == NULL));
-	if (s != NULL)
+	if (s != NULL) {
 		return s;
+	}
 
 #if 0	/* TODO: decide whether getstr() leaves term in closure or string form */
 	Ref(Term *, tp, term);
@@ -68,11 +73,14 @@ extern char *getstr(Term *term) {
 #endif
 }
 
-extern Term *termcat(Term *t1, Term *t2) {
-	if (t1 == NULL)
+extern Term
+*termcat(Term *t1, Term *t2) {
+	if (t1 == NULL) {
 		return t2;
-	if (t2 == NULL)
+	}
+	if (t2 == NULL) {
 		return t1;
+	}
 
 	Ref(Term *, term, mkstr(NULL));
 	Ref(char *, str1, getstr(t1));
@@ -83,27 +91,32 @@ extern Term *termcat(Term *t1, Term *t2) {
 }
 
 
-static void *TermCopy(void *op) {
+static void
+*TermCopy(void *op) {
 	void *np = gcnew(Term);
 	memcpy(np, op, sizeof (Term));
 	return np;
 }
 
-static size_t TermScan(void *p) {
+static size_t
+TermScan(void *p) {
 	Term *term = p;
 	term->closure = forward(term->closure);
 	term->str = forward(term->str);
 	return sizeof (Term);
 }
 
-extern Boolean termeq(Term *term, const char *s) {
+extern Boolean
+termeq(Term *term, const char *s) {
 	assert(term != NULL);
-	if (term->str == NULL)
+	if (term->str == NULL) {
 		return FALSE;
+	}
 	return streq(term->str, s);
 }
 
-extern Boolean isclosure(Term *term) {
+extern Boolean
+isclosure(Term *term) {
 	assert(term != NULL);
 	return term->closure != NULL;
 }

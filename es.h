@@ -262,7 +262,7 @@ extern int ewait(int pid, Boolean interruptible, void *rusage);
 
 typedef struct Dict Dict;
 extern Dict *mkdict(void);
-extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
+extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);
 extern Dict *dictput(Dict *dict, char *name, void *value);
 extern void *dictget2(Dict *dict, const char *name1, const char *name2);

@@ -7,7 +7,8 @@ DefineTag(Tree1, static);
 DefineTag(Tree2, static);
 
 /* mk -- make a new node; used to generate the parse tree */
-extern Tree *mk VARARGS1(NodeKind, t) {
+extern Tree
+*mk VARARGS1(NodeKind, t) {
 	va_list ap;
 	Tree *n;
 
@@ -57,19 +58,22 @@ extern Tree *mk VARARGS1(NodeKind, t) {
  *	the type to figure out size.
  */
 
-static void *Tree1Copy(void *op) {
+static void
+*Tree1Copy(void *op) {
 	void *np = gcalloc(offsetof(Tree, u[1]), &Tree1Tag);
 	memcpy(np, op, offsetof(Tree, u[1]));
 	return np;
 }
 
-static void *Tree2Copy(void *op) {
+static void
+*Tree2Copy(void *op) {
 	void *np = gcalloc(offsetof(Tree, u[2]), &Tree2Tag);
 	memcpy(np, op, offsetof(Tree, u[2]));
 	return np;
 }
 
-static size_t Tree1Scan(void *p) {
+static size_t
+Tree1Scan(void *p) {
 	Tree *n = p;
 	switch (n->kind) {
 	    default:
@@ -84,7 +88,8 @@ static size_t Tree1Scan(void *p) {
 	return offsetof(Tree, u[1]);
 }
 
-static size_t Tree2Scan(void *p) {
+static size_t
+Tree2Scan(void *p) {
 	Tree *n = p;
 	switch (n->kind) {
 	    case nAssign:  case nConcat: case nClosure: case nFor:

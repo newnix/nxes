@@ -15,7 +15,8 @@
 #define	OTHER	0
 
 /* ingroupset -- determine whether gid lies in the user's set of groups */
-static Boolean ingroupset(int gid) {
+static Boolean
+ingroupset(int gid) {
 #ifdef NGROUPS
 	int i;
 	static int ngroups;
@@ -25,19 +26,23 @@ static Boolean ingroupset(int gid) {
 		initialized = TRUE;
 		ngroups = getgroups(NGROUPS, gidset);
 	}
-	for (i = 0; i < ngroups; i++)
-		if (gid == gidset[i])
+	for (i = 0; i < ngroups; i++) {
+		if (gid == gidset[i]) {
 			return TRUE;
+		}
+	}
 #endif
 	return FALSE;
 }
 
-static int testperm(struct stat *stat, int perm) {
+static int
+testperm(struct stat *stat, int perm) {
 	int mask;
-	static int uid, gid;
+	static uid_t uid, gid;
 	static Boolean initialized = FALSE;
-	if (perm == 0)
+	if (perm == 0) {
 		return 0;
+	}
 	if (!initialized) {
 		initialized = TRUE;
 		uid = geteuid();
@@ -54,31 +59,38 @@ static int testperm(struct stat *stat, int perm) {
 	return (stat->st_mode & mask) ? 0 : EACCES;
 }
 
-static int testfile(char *path, int perm, int type) {
+static int
+testfile(char *path, int perm, int type) {
 	struct stat st;
 #ifdef S_IFLNK
 	if (type == S_IFLNK) {
-		if (lstat(path, &st) == -1)
+		if (lstat(path, &st) == -1) {
 			return errno;
+		}
 	} else
 #endif
-		if (stat(path, &st) == -1)
+		if (stat(path, &st) == -1) {
 			return errno;
-	if (type != 0 && (st.st_mode & S_IFMT) != type)
+		}
+	if (type != 0 && (st.st_mode & S_IFMT) != type) {
 		return EACCES;		/* what is an appropriate return value? */
+	}
 	return testperm(&st, perm);
 }
 
-static char *pathcat(char *prefix, char *suffix) {
+static char
+*pathcat(char *prefix, char *suffix) {
 	char *s;
 	size_t plen, slen, len;
 	static char *pathbuf = NULL;
 	static size_t pathlen = 0;
 
-	if (*prefix == '\0')
+	if (*prefix == '\0') {
 		return suffix;
-	if (*suffix == '\0')
+	}
+	if (*suffix == '\0') {
 		return prefix;
+	}
 
 	plen = strlen(prefix);
 	slen = strlen(suffix);
@@ -90,8 +102,9 @@ static char *pathcat(char *prefix, char *suffix) {
 
 	memcpy(pathbuf, prefix, plen);
 	s = pathbuf + plen;
-	if (s[-1] != '/')
+	if (s[-1] != '/') {
 		*s++ = '/';
+	}
 	memcpy(s, suffix, slen + 1);
 	return pathbuf;
 }
@@ -106,7 +119,7 @@ static List
 
 	gcdisable();
 	esoptbegin(list, "$&access", usage);
-	while ((c = esopt("bcdefln:prswx1")) != EOF)
+	while ((c = esopt("bcdefln:prswx1")) != EOF) {
 		switch (c) {
 		case 'n':	suffix = getstr(esoptarg());	break;
 		case '1':	first = TRUE;			break;
@@ -131,6 +144,7 @@ static List
 			esoptend();
 			fail("$&access", "access -%c is not supported on this system", c);
 		}
+	}
 	list = esoptend();
 
 	for (lp = NULL; list != NULL; list = list->next) {
@@ -138,8 +152,9 @@ static List
 		char *name;
 
 		name = getstr(list->term);
-		if (suffix != NULL)
+		if (suffix != NULL) {
 			name = pathcat(name, suffix);
+		}
 		error = testfile(name, perm, type);
 
 		if (first) {
@@ -151,19 +166,24 @@ static List
 					       NULL));
 				gcenable();
 				RefReturn(result);
-			} else if (error != ENOENT)
-				estatus = error;
-		} else
+			} else {
+				if (error != ENOENT) {
+					estatus = error;
+				}
+			}
+		} else {
 			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)),
 				    lp);
+		}
 	}
 
 	if (first && exception) {
 		gcenable();
-		if (suffix)
+		if (suffix) {
 			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
-		else
+		} else {
 			fail("$&access", "%s", esstrerror(estatus));
+		}
 	}
 
 	Ref(List *, result, reverse(lp));
@@ -171,12 +191,14 @@ static List
 	RefReturn(result);
 }
 
-extern Dict *initprims_access(Dict *primdict) {
+extern Dict
+*initprims_access(Dict *primdict) {
 	primdict = dictput(primdict, STRING(access), (void *)prim_access);
 	return primdict;
 }
 
-extern char *checkexecutable(char *file) {
+extern char
+*checkexecutable(char *file) {
 	int err = testfile(file, EXEC, S_IFREG);
 	return err == 0 ? NULL : esstrerror(err);
 }

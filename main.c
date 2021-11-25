@@ -14,7 +14,8 @@ extern char **environ;
 
 
 /* checkfd -- open /dev/null on an fd if it is closed */
-static void checkfd(int fd, OpenKind r) {
+static void
+checkfd(int fd, OpenKind r) {
 	int new;
 	new = dup(fd);
 	if (new != -1) {
@@ -25,7 +26,8 @@ static void checkfd(int fd, OpenKind r) {
 }
 
 /* initpath -- set $path based on the configuration default */
-static void initpath(void) {
+static void
+initpath(void) {
 	int i;
 	static const char * const path[] = { INITIAL_PATH };
 	
@@ -39,12 +41,14 @@ static void initpath(void) {
 }
 
 /* initpid -- set $pid for this shell */
-static void initpid(void) {
+static void
+initpid(void) {
 	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
 }
 
 /* loadprofile -- run the user's profile, if it exists */
-static void loadprofile(void) {
+static void
+loadprofile(void) {
 	char *profile = str("%L/.nxesrc", varlookup("home", NULL), "\001");
 	int fd = eopen(profile, oOpen);
 	if (fd != -1) {
@@ -68,7 +72,8 @@ static void loadprofile(void) {
 }
 
 /* usage -- print usage message and die */
-static noreturn usage(unsigned int rc) {
+static noreturn
+usage(unsigned int rc) {
 	eprint(
 		"usage: nxes [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"
@@ -97,7 +102,8 @@ static noreturn usage(unsigned int rc) {
 
 
 /* main -- initialize, parse command arguments, and start running */
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv) {
 	int c;
 	volatile int ac;
 	char **volatile av;
@@ -119,10 +125,11 @@ int main(int argc, char **argv) {
 		argv[0] = "es";
 		argv[1] = NULL;
 	}
-	if (*argv[0] == '-')
+	if (*argv[0] == '-') {
 		loginshell = TRUE;
+	}
 
-	while ((c = getopt(argc, argv, "ehilxvnpodsc:?GIL")) != EOF)
+	while ((c = getopt(argc, argv, "ehilxvnpodsc:?GIL")) != EOF) {
 		switch (c) {
 		case 'c':	cmd = optarg; break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
@@ -148,6 +155,7 @@ int main(int argc, char **argv) {
 		default:
 			usage(1);
 		}
+	}
 
 getopt_done:
 	if (cmd_stdin && cmd != NULL) {
@@ -166,8 +174,9 @@ getopt_done:
 	     && (optind == argc || cmd_stdin)
 	     && (runflags & run_interactive) == 0
 	     && isatty(0)
-	)
+	) {
 		runflags |= run_interactive;
+	}
 
 	ac = argc;
 	av = argv;
@@ -188,8 +197,9 @@ getopt_done:
 		hidevariables();
 		initenv(environ, protected);
 	
-		if (loginshell)
+		if (loginshell) {
 			loadprofile();
+		}
 	
 		if (cmd == NULL && !cmd_stdin && optind < ac) {
 			int fd;
@@ -205,21 +215,23 @@ getopt_done:
 	
 		vardef("*", NULL, listify(ac - optind, av + optind));
 		vardef("0", NULL, mklist(mkstr(av[0]), NULL));
-		if (cmd != NULL)
+		if (cmd != NULL) {
 			return exitstatus(runstring(cmd, NULL, runflags));
+		}
 		return exitstatus(runfd(0, "stdin", runflags));
 
 	/* XXX: Another rather large macro */
 	CatchException (e)
 
-		if (termeq(e->term, "exit"))
+		if (termeq(e->term, "exit")) {
 			return exitstatus(e->next);
-		else if (termeq(e->term, "error"))
+		} else if (termeq(e->term, "error")) {
 			eprint("%L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
-		else if (!issilentsignal(e))
+		} else if (!issilentsignal(e)) {
 			eprint("uncaught exception: %L\n", e, " ");
+		}
 		return 1;
 
 	/* XXX: Expands to a closing brace */

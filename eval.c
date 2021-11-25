@@ -4,7 +4,8 @@
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 
-static noreturn failexec(char *file, List *args) {
+static noreturn
+failexec(char *file, List *args) {
 	List *fn;
 	assert(gcisblocked());
 	fn = varlookup("fn-%exec-failure", NULL);
@@ -23,7 +24,8 @@ static noreturn failexec(char *file, List *args) {
 }
 
 /* forkexec -- fork (if necessary) and exec */
-extern List *forkexec(char *file, List *list, Boolean inchild) {
+extern List
+*forkexec(char *file, List *list, Boolean inchild) {
 	int pid, status;
 	Vector *env;
 	gcdisable();
@@ -39,22 +41,25 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 		sigint_newline = FALSE;
 		SIGCHK();
 		sigint_newline = TRUE;
-	} else
+	} else {
 		SIGCHK();
+	}
 	printstatus(0, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
 
 /* assign -- bind a list of values to a list of variables */
-static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
+static List
+*assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 	Ref(List *, result, NULL);
 
 	Ref(Tree *, valueform, valueform0);
 	Ref(Binding *, binding, binding0);
 	Ref(List *, vars, glom(varform, binding, FALSE));
 
-	if (vars == NULL)
+	if (vars == NULL) {
 		fail("es:assign", "null variable name");
+	}
 
 	Ref(List *, values, glom(valueform, binding, TRUE));
 	result = values;
@@ -62,9 +67,9 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 	for (; vars != NULL; vars = vars->next) {
 		List *value;
 		Ref(char *, name, getstr(vars->term));
-		if (values == NULL)
+		if (values == NULL) {
 			value = NULL;
-		else if (vars->next == NULL || values->next == NULL) {
+		} else if (vars->next == NULL || values->next == NULL) {
 			value = values;
 			values = NULL;
 		} else {
@@ -80,31 +85,33 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 }
 
 /* letbindings -- create a new Binding containing let-bound variables */
-static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int evalflags) {
+static Binding
+*letbindings(Tree *defn0, Binding *outer0, Binding *context0, int evalflags) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);
 
 	for (; defn != NULL; defn = defn->u[1].p) {
 		assert(defn->kind == nList);
-		if (defn->u[0].p == NULL)
+		if (defn->u[0].p == NULL) {
 			continue;
+		}
 
 		Ref(Tree *, assign, defn->u[0].p);
 		assert(assign->kind == nAssign);
 		Ref(List *, vars, glom(assign->u[0].p, context, FALSE));
 		Ref(List *, values, glom(assign->u[1].p, context, TRUE));
 
-		if (vars == NULL)
+		if (vars == NULL) {
 			fail("es:let", "null variable name");
+		}
 
 		for (; vars != NULL; vars = vars->next) {
 			List *value;
 			Ref(char *, name, getstr(vars->term));
-			if (values == NULL)
+			if (values == NULL) {
 				value = NULL;
-			else if (vars->next == NULL || values->next == NULL) {
+			} else if (vars->next == NULL || values->next == NULL) {
 				value = values;
 				values = NULL;
 			} else {
@@ -123,11 +130,11 @@ static Binding *letbindings(Tree *defn0, Binding *outer0,
 }
 
 /* localbind -- recursively convert a Bindings list into dynamic binding */
-static List *localbind(Binding *dynamic0, Binding *lexical0,
-		       Tree *body0, int evalflags) {
-	if (dynamic0 == NULL)
+static List
+*localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags) {
+	if (dynamic0 == NULL) {
 		return walk(body0, lexical0, evalflags);
-	else {
+	} else {
 		Push p;
 		Ref(List *, result, NULL);
 		Ref(Tree *, body, body0);
@@ -142,10 +149,10 @@ static List *localbind(Binding *dynamic0, Binding *lexical0,
 		RefReturn(result);
 	}
 }
-	
+
 /* local -- build, recursively, one layer of local assignment */
-static List *local(Tree *defn, Tree *body0,
-		   Binding *bindings0, int evalflags) {
+static List
+*local(Tree *defn, Tree *body0, Binding *bindings0, int evalflags) {
 	Ref(List *, result, NULL);
 	Ref(Tree *, body, body0);
 	Ref(Binding *, bindings, bindings0);
@@ -159,8 +166,8 @@ static List *local(Tree *defn, Tree *body0,
 }
 
 /* forloop -- evaluate a for loop */
-static List *forloop(Tree *defn0, Tree *body0,
-		     Binding *binding, int evalflags) {
+static List
+*forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags) {
 	static List MULTIPLE = { NULL, NULL };
 
 	Ref(List *, result, true);
@@ -171,14 +178,16 @@ static List *forloop(Tree *defn0, Tree *body0,
 	Ref(Tree *, defn, defn0);
 	for (; defn != NULL; defn = defn->u[1].p) {
 		assert(defn->kind == nList);
-		if (defn->u[0].p == NULL)
+		if (defn->u[0].p == NULL) {
 			continue;
+		}
 		Ref(Tree *, assign, defn->u[0].p);
 		assert(assign->kind == nAssign);
 		Ref(List *, vars, glom(assign->u[0].p, outer, FALSE));
 		Ref(List *, list, glom(assign->u[1].p, outer, TRUE));
-		if (vars == NULL)
+		if (vars == NULL) {
 			fail("es:for", "null variable name");
+		}
 		for (; vars != NULL; vars = vars->next) {
 			char *var = getstr(vars->term);
 			looping = mkbinding(var, list, looping);
@@ -199,8 +208,9 @@ static List *forloop(Tree *defn0, Tree *body0,
 			Ref(Binding *, sequence, NULL);
 			for (; lp != NULL; lp = lp->next) {
 				Ref(List *, value, NULL);
-				if (lp->defn != &MULTIPLE)
+				if (lp->defn != &MULTIPLE) {
 					sequence = lp;
+				}
 				assert(sequence != NULL);
 				if (sequence->defn != NULL) {
 					value = mklist(sequence->defn->term,
@@ -223,8 +233,9 @@ static List *forloop(Tree *defn0, Tree *body0,
 
 	CatchException (e)
 
-		if (!termeq(e->term, "break"))
+		if (!termeq(e->term, "break")) {
 			throw(e);
+		}
 		result = e->next;
 
 	EndExceptionHandler
@@ -234,8 +245,8 @@ static List *forloop(Tree *defn0, Tree *body0,
 }
 
 /* matchpattern -- does the text match a pattern? */
-static List *matchpattern(Tree *subjectform0, Tree *patternform0,
-			  Binding *binding) {
+static List
+*matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding) {
 	Boolean result;
 	List *pattern;
 	StrList *quote = NULL;
@@ -249,8 +260,8 @@ static List *matchpattern(Tree *subjectform0, Tree *patternform0,
 }
 
 /* extractpattern -- Like matchpattern, but returns matches */
-static List *extractpattern(Tree *subjectform0, Tree *patternform0,
-			    Binding *binding) {
+static List
+*extractpattern(Tree *subjectform0, Tree *patternform0, Binding *binding) {
 	List *pattern;
 	StrList *quote = NULL;
 	Ref(List *, result, NULL);
@@ -264,15 +275,17 @@ static List *extractpattern(Tree *subjectform0, Tree *patternform0,
 }
 
 /* walk -- walk through a tree, evaluating nodes */
-extern List *walk(Tree *tree0, Binding *binding0, int flags) {
+extern List
+*walk(Tree *tree0, Binding *binding0, int flags) {
 	Tree *volatile tree = tree0;
 	Binding *volatile binding = binding0;
 
 	SIGCHK();
 
 top:
-	if (tree == NULL)
+	if (tree == NULL) {
 		return true;
+	}
 
 	switch (tree->kind) {
 
@@ -316,9 +329,11 @@ top:
 }
 
 /* bindargs -- bind an argument list to the parameters of a lambda */
-extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
-	if (params == NULL)
+extern Binding
+*bindargs(Tree *params, List *args, Binding *binding) {
+	if (params == NULL) {
 		return mkbinding("*", args, binding);
+	}
 
 	gcdisable();
 
@@ -328,9 +343,9 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 		assert(params->kind == nList);
 		param = params->u[0].p;
 		assert(param->kind == nWord || param->kind == nQword);
-		if (args == NULL)
+		if (args == NULL) {
 			value = NULL;
-		else if (params->u[1].p == NULL || args->next == NULL) {
+		} else if (params->u[1].p == NULL || args->next == NULL) {
 			value = args;
 			args = NULL;
 		} else {
@@ -346,22 +361,26 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 }
 
 /* pathsearch -- evaluate fn %pathsearch + some argument */
-extern List *pathsearch(Term *term) {
+extern List
+*pathsearch(Term *term) {
 	List *search, *list;
 	search = varlookup("fn-%pathsearch", NULL);
-	if (search == NULL)
+	if (search == NULL) {
 		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
+	}
 	list = mklist(term, NULL);
 	return eval(append(search, list), NULL, 0);
 }
 
 /* eval -- evaluate a list, producing a list */
-extern List *eval(List *list0, Binding *binding0, int flags) {
+extern List
+*eval(List *list0, Binding *binding0, int flags) {
 	Closure *volatile cp;
 	List *fn;
 
-	if (++evaldepth >= maxevaldepth)
+	if (++evaldepth >= maxevaldepth) {
 		fail("es:eval", "max-eval-depth exceeded");
+	}
 
 	Ref(List *, list, list0);
 	Ref(Binding *, binding, binding0);
@@ -393,14 +412,16 @@ restart:
 					       bindargs(tree->u[0].p,
 							list->next,
 							cp->binding));
-				if (funcname != NULL)
+				if (funcname != NULL) {
 					varpush(&p, "0",
 						    mklist(mkterm(funcname,
 								  NULL),
 							   NULL));
+				}
 				list = walk(tree->u[1].p, context, flags);
-				if (funcname != NULL)
+				if (funcname != NULL) {
 					varpop(&p);
+				}
 				RefEnd2(context, tree);
 	
 			CatchException (e)
@@ -437,8 +458,9 @@ restart:
 	}
 	if (isabsolute(name)) {
 		char *error = checkexecutable(name);
-		if (error != NULL)
+		if (error != NULL) {
 			fail("$&whatis", "%s: %s", name, error);
+		}
 		list = forkexec(name, list, flags & eval_inchild);
 		RefPop(name);
 		goto done;
@@ -458,13 +480,15 @@ restart:
 
 done:
 	--evaldepth;
-	if ((flags & eval_exitonfalse) && !istrue(list))
+	if ((flags & eval_exitonfalse) && !istrue(list)) {
 		exit(exitstatus(list));
+	}
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }
 
 /* eval1 -- evaluate a term, producing a list */
-extern List *eval1(Term *term, int flags) {
+extern List
+*eval1(Term *term, int flags) {
 	return eval(mklist(term, NULL), NULL, flags);
 }

@@ -27,22 +27,27 @@ static Boolean rebound = TRUE;
 
 DefineTag(Var, static);
 
-static Boolean specialvar(const char *name) {
+static Boolean
+specialvar(const char *name) {
 	return (*name == '*' || *name == '0') && name[1] == '\0';
 }
 
-static Boolean hasbindings(List *list) {
-	for (; list != NULL; list = list->next)
+static Boolean
+hasbindings(List *list) {
+	for (; list != NULL; list = list->next) {
 		if (isclosure(list->term)) {
 			Closure *closure = getclosure(list->term);
 			assert(closure != NULL);
-			if (closure->binding != NULL)
+			if (closure->binding != NULL) {
 				return TRUE;
+			}
 		}
+	}
 	return FALSE;
 }
 
-static Var *mkvar(List *defn) {
+static Var
+*mkvar(List *defn) {
 	Ref(Var *, var, NULL);
 	Ref(List *, lp, defn);
 	var = gcnew(Var);
@@ -53,13 +58,15 @@ static Var *mkvar(List *defn) {
 	RefReturn(var);
 }
 
-static void *VarCopy(void *op) {
+static void
+*VarCopy(void *op) {
 	void *np = gcnew(Var);
 	memcpy(np, op, sizeof (Var));
 	return np;
 }
 
-static size_t VarScan(void *p) {
+static size_t
+VarScan(void *p) {
 	Var *var = p;
 	var->defn = forward(var->defn);
 	var->env = ((var->flags & var_hasbindings) && rebound) ? NULL : forward(var->env);
@@ -68,14 +75,18 @@ static size_t VarScan(void *p) {
 
 /* TODO: hand off to libc strtol(3) instead to allow for potentially leveraging optimized assembly routines */
 /* iscounting -- is it a counter number, i.e., an integer > 0 */
-static Boolean iscounting(const char *name) {
+static Boolean
+iscounting(const char *name) {
 	int c;
 	const char *s = name;
-	while ((c = *s++) != '\0')
-		if (!isdigit(c))
+	while ((c = *s++) != '\0') {
+		if (!isdigit(c)) {
 			return FALSE;
-	if (streq(name, "0"))
+		}
+	}
+	if (streq(name, "0")) {
 		return FALSE;
+	}
 	return name[0] != '\0';
 }
 
@@ -85,81 +96,101 @@ static Boolean iscounting(const char *name) {
  */
 
 /* validatevar -- ensure that a variable name is valid */
-extern void validatevar(const char *var) {
-	if (*var == '\0')
+extern void
+validatevar(const char *var) {
+	if (*var == '\0') {
 		fail("es:var", "zero-length variable name");
-	if (iscounting(var))
+	}
+	if (iscounting(var)) {
 		fail("es:var", "illegal variable name: %S", var);
+	}
 #if !PROTECT_ENV
-	if (strchr(var, '=') != NULL)
+	if (strchr(var, '=') != NULL) {
 		fail("es:var", "'=' in variable name: %S", var);
+	}
 #endif
 }
 
 /* isexported -- is a variable exported? */
-static Boolean isexported(const char *name) {
-	if (specialvar(name))
+static Boolean
+isexported(const char *name) {
+	if (specialvar(name)) {
 		return FALSE;
-	if (noexport == NULL)
+	}
+	if (noexport == NULL) {
 		return TRUE;
+	}
 	return dictget(noexport, name) == NULL;
 }
 
 /* setnoexport -- mark a list of variable names not for export */
-extern void setnoexport(List *list) {
+extern void
+setnoexport(List *list) {
 	isdirty = TRUE;
 	if (list == NULL) {
 		noexport = NULL;
 		return;
 	}
 	gcdisable();
-	for (noexport = mkdict(); list != NULL; list = list->next)
+	for (noexport = mkdict(); list != NULL; list = list->next) {
 		noexport = dictput(noexport, getstr(list->term), (void *) setnoexport);
+	}
 	gcenable();
 }
 
 /* varlookup -- lookup a variable in the current context */
-extern List *varlookup(const char *name, Binding *bp) {
+extern List
+*varlookup(const char *name, Binding *bp) {
 	Var *var;
 
 	if (iscounting(name)) {
 		Term *term = nth(varlookup("*", bp), strtol(name, NULL, 10));
-		if (term == NULL)
+		if (term == NULL) {
 			return NULL;
+		}
 		return mklist(term, NULL);
 	}
 
 	validatevar(name);
-	for (; bp != NULL; bp = bp->next)
-		if (streq(name, bp->name))
+	for (; bp != NULL; bp = bp->next) {
+		if (streq(name, bp->name)) {
 			return bp->defn;
+		}
+	}
 
 	var = dictget(vars, name);
-	if (var == NULL)
+	if (var == NULL) {
 		return NULL;
+	}
 	return var->defn;
 }
 
 /* FIXME: Add documentation as to why this is needed in addition to varlookup() */
-extern List *varlookup2(char *name1, char *name2, Binding *bp) {
+extern List
+*varlookup2(char *name1, char *name2, Binding *bp) {
 	Var *var;
 	
-	for (; bp != NULL; bp = bp->next)
-		if (streq2(bp->name, name1, name2))
+	for (; bp != NULL; bp = bp->next) {
+		if (streq2(bp->name, name1, name2)) {
 			return bp->defn;
+		}
+	}
 
 	var = dictget2(vars, name1, name2);
-	if (var == NULL)
+	if (var == NULL) {
 		return NULL;
+	}
 	return var->defn;
 }
 
-static List *callsettor(char *name, List *defn) {
+static List
+*callsettor(char *name, List *defn) {
 	Push p;
 	List *settor;
 
-	if (specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
+	if (specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL) {
 		return defn;
+	}
 
 	Ref(List *, lp, defn);
 	Ref(List *, fn, settor);
@@ -172,38 +203,43 @@ static List *callsettor(char *name, List *defn) {
 	RefReturn(lp);
 }
 
-extern void vardef(char *name, Binding *binding, List *defn) {
+extern void
+vardef(char *name, Binding *binding, List *defn) {
 	Var *var;
 
 	validatevar(name);
-	for (; binding != NULL; binding = binding->next)
+	for (; binding != NULL; binding = binding->next) {
 		if (streq(name, binding->name)) {
 			binding->defn = defn;
 			rebound = TRUE;
 			return;
 		}
+	}
 
 	RefAdd(name);
 	defn = callsettor(name, defn);
-	if (isexported(name))
+	if (isexported(name)) {
 		isdirty = TRUE;
+	}
 
 	var = dictget(vars, name);
-	if (var != NULL)
+	if (var != NULL) {
 		if (defn != NULL) {
 			var->defn = defn;
 			var->env = NULL;
 			var->flags = hasbindings(defn) ? var_hasbindings : 0;
-		} else
+		} else {
 			vars = dictput(vars, name, NULL);
-	else if (defn != NULL) {
+		}
+	} else if (defn != NULL) {
 		var = mkvar(defn);
 		vars = dictput(vars, name, var);
 	}
 	RefRemove(name);
 }
 
-extern void varpush(Push *push, char *name, List *defn) {
+extern void
+varpush(Push *push, char *name, List *defn) {
 	Var *var;
 
 	validatevar(name);
@@ -212,8 +248,9 @@ extern void varpush(Push *push, char *name, List *defn) {
 	push->nameroot.p = (void **) &push->name;
 	rootlist = &push->nameroot;
 
-	if (isexported(name))
+	if (isexported(name)) {
 		isdirty = TRUE;
+	}
 	defn = callsettor(name, defn);
 
 	var = dictget(vars, push->name);
@@ -238,26 +275,29 @@ extern void varpush(Push *push, char *name, List *defn) {
 	rootlist = &push->defnroot;
 }
 
-extern void varpop(Push *push) {
+extern void
+varpop(Push *push) {
 	Var *var;
 	
 	assert(pushlist == push);
 	assert(rootlist == &push->defnroot);
 	assert(rootlist->next == &push->nameroot);
 
-	if (isexported(push->name))
+	if (isexported(push->name)) {
 		isdirty = TRUE;
+	}
 	push->defn = callsettor(push->name, push->defn);
 	var = dictget(vars, push->name);
 
-	if (var != NULL)
+	if (var != NULL) {
 		if (push->defn != NULL) {
 			var->defn = push->defn;
 			var->flags = push->flags;
 			var->env = NULL;
-		} else
+		} else {
 			vars = dictput(vars, push->name, NULL);
-	else if (push->defn != NULL) {
+		}
+	} else if (push->defn != NULL) {
 		var = mkvar(NULL);
 		var->defn = push->defn;
 		var->flags = push->flags;
@@ -268,7 +308,8 @@ extern void varpop(Push *push) {
 	rootlist = rootlist->next->next;
 }
 
-static void mkenv0(void *dummy, char *key, void *value) {
+static void
+mkenv0(void *dummy, char *key, void *value) {
 	Var *var = value;
 	assert(gcisblocked());
 	if (
@@ -276,8 +317,9 @@ static void mkenv0(void *dummy, char *key, void *value) {
 		|| var->defn == NULL
 		|| (var->flags & var_isinternal)
 		|| !isexported(key)
-	)
+	) {
 		return;
+	}
 	if (var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
 		char *envstr = str(ENV_FORMAT, key, var->defn);
 		var->env = envstr;
@@ -292,7 +334,8 @@ static void mkenv0(void *dummy, char *key, void *value) {
 	}
 }
 	
-extern Vector *mkenv(void) {
+extern Vector
+*mkenv(void) {
 	if (isdirty || rebound) {
 		env->count = envmin;
 		gcdisable();		/* TODO: make this a good guess */
@@ -301,8 +344,9 @@ extern Vector *mkenv(void) {
 		env->vector[env->count] = NULL;
 		isdirty = FALSE;
 		rebound = FALSE;
-		if (sortenv == NULL || env->count > sortenv->alloclen)
+		if (sortenv == NULL || env->count > sortenv->alloclen) {
 			sortenv = mkvector(env->count * 2);
+		}
 		sortenv->count = env->count;
 		memcpy(sortenv->vector, env->vector, sizeof (char *) * (env->count + 1));
 		sortvector(sortenv);
@@ -311,24 +355,30 @@ extern Vector *mkenv(void) {
 }
 
 /* addtolist -- dictforall procedure to create a list */
-extern void addtolist(void *arg, char *key, void *value) {
+extern void
+addtolist(void *arg, char *key, void *value) {
 	List **listp = arg;
 	Term *term = mkstr(key);
 	*listp = mklist(term, *listp);
 }
 
-static void listexternal(void *arg, char *key, void *value) {
-	if ((((Var *) value)->flags & var_isinternal) == 0 && !specialvar(key))
+static void
+listexternal(void *arg, char *key, void *value) {
+	if ((((Var *) value)->flags & var_isinternal) == 0 && !specialvar(key)) {
 		addtolist(arg, key, value);
+	}
 }
 
-static void listinternal(void *arg, char *key, void *value) {
-	if (((Var *) value)->flags & var_isinternal)
+static void
+listinternal(void *arg, char *key, void *value) {
+	if (((Var *) value)->flags & var_isinternal) {
 		addtolist(arg, key, value);
+	}
 }
 
 /* listvars -- return a list of all the (dynamic) variables */
-extern List *listvars(Boolean internal) {
+extern List
+*listvars(Boolean internal) {
 	Ref(List *, varlist, NULL);
 	dictforall(vars, internal ? listinternal : listexternal, &varlist);
 	varlist = sortlist(varlist);
@@ -336,17 +386,20 @@ extern List *listvars(Boolean internal) {
 }
 
 /* hide -- worker function for dictforall to hide initial state */
-static void hide(void *dummy, char *key, void *value) {
+static void
+hide(void *dummy, char *key, void *value) {
 	((Var *) value)->flags |= var_isinternal;
 }
 
 /* hidevariables -- mark all variables as internal */
-extern void hidevariables(void) {
+extern void
+hidevariables(void) {
 	dictforall(vars, hide, NULL);
 }
 
 /* initvars -- initialize the variable machinery */
-extern void initvars(void) {
+extern void
+initvars(void) {
 	globalroot(&vars);
 	globalroot(&noexport);
 	globalroot(&env);
@@ -363,7 +416,8 @@ extern void initvars(void) {
 
 /* XXX: This and initenv() are the targets for fixing how functions are exported as environment variables */
 /* importvar -- import a single environment variable */
-static void importvar(char *name0, char *value) {
+static void
+importvar(char *name0, char *value) {
 	char sep[2] = { ENV_SEPARATOR, '\0' };
 
 	Ref(char *, name, name0);
@@ -417,7 +471,8 @@ static void importvar(char *name0, char *value) {
 
 
 /* initenv -- load variables from the environment */
-extern void initenv(char **envp, Boolean protected) {
+extern void
+initenv(char **envp, Boolean protected) {
 	char *envstr;
 	size_t bufsize = 1024;
 	char *buf = ealloc(bufsize);
@@ -452,8 +507,9 @@ extern void initenv(char **envp, Boolean protected) {
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
-		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
 			importvar(name, eq);
+		}
 	}
 
 	envmin = env->count;

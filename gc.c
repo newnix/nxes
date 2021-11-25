@@ -83,7 +83,8 @@ static void initmmu(void) {
 }
 
 /* take -- allocate memory for a space */
-static void *take(size_t n) {
+static void
+*take(size_t n) {
 	vm_address_t addr;
 	kern_return_t error = vm_allocate(task_self(), &addr, n, TRUE);
 	if (error != KERN_SUCCESS) {
@@ -95,7 +96,8 @@ static void *take(size_t n) {
 }
 
 /* release -- deallocate a range of memory */
-static void release(void *p, size_t n) {
+static void
+release(void *p, size_t n) {
 	kern_return_t error = vm_deallocate(task_self(), (vm_address_t) p, n);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_deallocate", error);
@@ -104,7 +106,8 @@ static void release(void *p, size_t n) {
 }
 
 /* invalidate -- disable access to a range of memory */
-static void invalidate(void *p, size_t n) {
+static void
+invalidate(void *p, size_t n) {
 	kern_return_t error = vm_protect(task_self(), (vm_address_t) p, n, FALSE, 0);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_protect 0", error);
@@ -113,7 +116,8 @@ static void invalidate(void *p, size_t n) {
 }
 
 /* revalidate -- enable access to a range of memory */
-static void revalidate(void *p, size_t n) {
+static void
+revalidate(void *p, size_t n) {
 	kern_return_t error =
 		vm_protect(task_self(), (vm_address_t) p, n, FALSE, VM_PROT_READ|VM_PROT_WRITE);
 	if (error != KERN_SUCCESS) {
@@ -133,42 +137,52 @@ static int pagesize;
 #define	PAGEROUND(n)	((n) + pagesize - 1) &~ (pagesize - 1)
 
 /* take -- allocate memory for a space */
-static void *take(size_t n) {
+static void
+*take(size_t n) {
 	caddr_t addr;
 #ifdef MAP_ANONYMOUS
 	addr = mmap(0, n, PROT_READ|PROT_WRITE,	MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 #else
 	static int devzero = -1;
-	if (devzero == -1)
+	if (devzero == -1) {
 		devzero = eopen("/dev/zero", oOpen);
+	}
 	addr = mmap(0, n, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero, 0);
 #endif
-	if (addr == (caddr_t) -1)
+	if (addr == (caddr_t) -1) {
 		panic("mmap: %s", esstrerror(errno));
+	}
 	memset(addr, 0xA5, n);
 	return addr;
 }
 
 /* release -- deallocate a range of memory */
-static void release(void *p, size_t n) {
-	if (munmap(p, n) == -1)
+static void
+release(void *p, size_t n) {
+	if (munmap(p, n) == -1) {
 		panic("munmap: %s", esstrerror(errno));
+	}
 }
 
 /* invalidate -- disable access to a range of memory */
-static void invalidate(void *p, size_t n) {
-	if (mprotect(p, n, PROT_NONE) == -1)
+static void
+invalidate(void *p, size_t n) {
+	if (mprotect(p, n, PROT_NONE) == -1) {
 		panic("mprotect(PROT_NONE): %s", esstrerror(errno));
+	}
 }
 
 /* revalidate -- enable access to a range of memory */
-static void revalidate(void *p, size_t n) {
-	if (mprotect(p, n, PROT_READ|PROT_WRITE) == -1)
+static void
+revalidate(void *p, size_t n) {
+	if (mprotect(p, n, PROT_READ|PROT_WRITE) == -1) {
 		panic("mprotect(PROT_READ|PROT_WRITE): %s", esstrerror(errno));
+	}
 }
 
 /* initmmu -- initialization for memory management calls */
-static void initmmu(void) {
+static void
+initmmu(void) {
 #if HAVE_SYSCONF
 	pagesize = sysconf(_SC_PAGESIZE);
 #else
@@ -187,26 +201,28 @@ static void initmmu(void) {
 #if GCPROTECT
 
 /* mkspace -- create a new ``half'' space in debugging mode */
-static Space *mkspace(Space *space, Space *next) {
+static Space
+*mkspace(Space *space, Space *next) {
 	assert(space == NULL || (&spaces[0] <= space && space < &spaces[NSPACES]));
 
 	if (space != NULL) {
 		Space *sp;
-		if (space->bot == NULL)
+		if (space->bot == NULL) {
 			sp = NULL;
-		else if (SPACESIZE(space) < minspace)
+		} else if (SPACESIZE(space) < minspace) {
 			sp = space;
-		else {
+		} else {
 			sp = space->next;
 			revalidate(space->bot, SPACESIZE(space));
 		}
 		while (sp != NULL) {
 			Space *tail = sp->next;
 			release(sp->bot, SPACESIZE(sp));
-			if (&spaces[0] <= space && space < &spaces[NSPACES])
+			if (&spaces[0] <= space && space < &spaces[NSPACES]) {
 				sp->bot = NULL;
-			else
+			} else {
 				efree(sp);
+			}
 			sp = tail;
 		}
 	}
@@ -231,7 +247,8 @@ static Space *mkspace(Space *space, Space *next) {
 #else	/* !GCPROTECT */
 
 /* newspace -- create a new ``half'' space */
-static Space *newspace(Space *next) {
+static Space
+*newspace(Space *next) {
 	size_t n = ALIGN(minspace);
 	Space *space = ealloc(sizeof (Space) + n);
 	space->bot = (void *) &space[1];
@@ -244,18 +261,20 @@ static Space *newspace(Space *next) {
 #endif	/* !GCPROTECT */
 
 /* deprecate -- take a space and invalidate it */
-static void deprecate(Space *space) {
+static void
+deprecate(Space *space) {
 #if GCPROTECT
 	Space *base;
 	assert(space != NULL);
-	for (base = space; base->next != NULL; base = base->next)
+	for (base = space; base->next != NULL; base = base->next) {
 		;
+	}
 	assert(&spaces[0] <= base && base < &spaces[NSPACES]);
 	for (;;) {
 		invalidate(space->bot, SPACESIZE(space));
-		if (space == base)
+		if (space == base) {
 			break;
-		else {
+		} else {
 			Space *next = space->next;
 			space->next = base->next;
 			base->next = space;
@@ -273,12 +292,14 @@ static void deprecate(Space *space) {
 }
 
 /* isinspace -- does an object lie inside a given Space? */
-extern Boolean isinspace(Space *space, void *p) {
-	for (; space != NULL; space = space->next)
+extern Boolean
+isinspace(Space *space, void *p) {
+	for (; space != NULL; space = space->next) {
 		if (INSPACE(p, space)) {
 		 	assert((char *) p < space->current);
 		 	return TRUE;
 		}
+	}
 	return FALSE;
 }
 
@@ -288,11 +309,13 @@ extern Boolean isinspace(Space *space, void *p) {
  */
 
 /* globalroot -- add an external to the list of global roots */
-extern void globalroot(void *addr) {
+extern void
+globalroot(void *addr) {
 	Root *root;
 #if ASSERTIONS
-	for (root = globalrootlist; root != NULL; root = root->next)
+	for (root = globalrootlist; root != NULL; root = root->next) {
 		assert(root->p != addr);
+	}
 #endif
 	root = ealloc(sizeof (Root));
 	root->p = addr;
@@ -300,6 +323,9 @@ extern void globalroot(void *addr) {
 	globalrootlist = root;
 }
 
+/*
+ * XXX: Is this something we realistically have to care about anymore?
+ */
 /* not portable to word addressed machines */
 #define	TAG(p)		(((Tag **) p)[-1])
 #define	FORWARDED(tagp)	(((int) tagp) & 1)
@@ -307,7 +333,8 @@ extern void globalroot(void *addr) {
 #define	FOLLOW(tagp)	((void *) (((char *) tagp) - 1))
 
 /* forward -- forward an individual pointer from old space */
-extern void *forward(void *p) {
+extern void
+*forward(void *p) {
 	Tag *tag;
 	void *np;
 
@@ -334,7 +361,8 @@ extern void *forward(void *p) {
 }
 
 /* scanroots -- scan a rootlist */
-static void scanroots(Root *rootlist) {
+static void
+scanroots(Root *rootlist) {
 	Root *root;
 	for (root = rootlist; root != NULL; root = root->next) {
 		VERBOSE(("GC root at %8lx: %8lx\n", root->p, *root->p));
@@ -343,7 +371,8 @@ static void scanroots(Root *rootlist) {
 }
 
 /* scanspace -- scan new space until it is up to date */
-static void scanspace(void) {
+static void
+scanspace(void) {
 	Space *sp, *scanned;
 	for (scanned = NULL;;) {
 		Space *front = new;
@@ -359,8 +388,9 @@ static void scanspace(void) {
 				scan += ALIGN((*tag->scan)(scan));
 			}
 		}
-		if (new == front)
+		if (new == front) {
 			break;
+		}
 		scanned = front;
 	}
 }
@@ -371,40 +401,48 @@ static void scanspace(void) {
  */
 
 /* gcenable -- enable collections */
-extern void gcenable(void) {
+extern void
+gcenable(void) {
 	assert(gcblocked > 0);
 	--gcblocked;
-	if (!gcblocked && new->next != NULL)
+	if (!gcblocked && new->next != NULL) {
 		gc();
+	}
 }
 
 /* gcdisable -- disable collections */
-extern void gcdisable(void) {
+extern void
+gcdisable(void) {
 	assert(gcblocked >= 0);
 	++gcblocked;
 }
 
 /* gcreserve -- provoke a collection if there's not a certain amount of space around */
-extern void gcreserve(size_t minfree) {
+extern void
+gcreserve(size_t minfree) {
 	if (SPACEFREE(new) < minfree) {
-		if (minspace < minfree)
+		if (minspace < minfree) {
 			minspace = minfree;
+		}
 		gc();
 	}
 #if GCALWAYS
-	else
+	else {
 		gc();
+	}
 #endif
 }
 
 /* gcisblocked -- is collection disabled? */
-extern Boolean gcisblocked(void) {
+extern Boolean
+gcisblocked(void) {
 	assert(gcblocked >= 0);
 	return gcblocked != 0;
 }
 
 /* gc -- actually do a garbage collection */
-extern void gc(void) {
+extern void
+gc(void) {
 	do {
 		size_t livedata;
 		Space *space;
@@ -417,26 +455,30 @@ extern void gc(void) {
 #endif
 
 		assert(gcblocked >= 0);
-		if (gcblocked > 0)
+		if (gcblocked > 0) {
 			return;
+		}
 		++gcblocked;
 
 		assert(new != NULL);
 		assert(old == NULL);
 		old = new;
 #if GCPROTECT
-		for (; new->next != NULL; new = new->next)
+		for (; new->next != NULL; new = new->next) {
 			;
-		if (++new >= &spaces[NSPACES])
+		}
+		if (++new >= &spaces[NSPACES]) {
 			new = &spaces[0];
+		}
 		new = mkspace(new, NULL);
 #else
 		new = newspace(NULL);
 #endif
 		VERBOSE(("\nGC collection starting\n"));
 #if GCVERBOSE
-		for (space = old; space != NULL; space = space->next)
+		for (space = old; space != NULL; space = space->next) {
 			VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
+		}
 #endif
 		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
 		VERBOSE(("GC scanning root list\n"));
@@ -450,8 +492,9 @@ extern void gc(void) {
 		deprecate(old);
 		old = NULL;
 
-		for (livedata = 0, space = new; space != NULL; space = space->next)
+		for (livedata = 0, space = new; space != NULL; space = space->next) {
 			livedata += SPACEUSED(space);
+		}
 
 #if GCINFO
 		if (gcinfo)
@@ -461,17 +504,19 @@ extern void gc(void) {
 			);
 #endif
 
-		if (minspace < livedata * 2)
+		if (minspace < livedata * 2) {
 			minspace = livedata * 4;
-		else if (minspace > livedata * 12 && minspace > (MIN_minspace * 2))
+		} else if (minspace > livedata * 12 && minspace > (MIN_minspace * 2)) {
 			minspace /= 2;
+		}
 
 		--gcblocked;
 	} while (new->next != NULL);
 }
 
 /* initgc -- initialize the garbage collector */
-extern void initgc(void) {
+extern void
+initgc(void) {
 #if GCPROTECT
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
@@ -489,7 +534,8 @@ extern void initgc(void) {
  */
 
 /* gcalloc -- allocate an object in new space */
-extern void *gcalloc(size_t nbytes, Tag *tag) {
+extern void
+*gcalloc(size_t nbytes, Tag *tag) {
 	size_t n = ALIGN(nbytes + sizeof (Tag *));
 #if GCALWAYS
 	gc();
@@ -503,12 +549,14 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
 			*p++ = tag;
 			return p;
 		}
-		if (minspace < nbytes)
+		if (minspace < nbytes) {
 			minspace = nbytes + sizeof (Tag *);
-		if (gcblocked)
+		}
+		if (gcblocked) {
 			new = newspace(new);
-		else
+		} else {
 			gc();
+		}
 	}
 }
 
@@ -520,7 +568,8 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
 #define notstatic
 DefineTag(String, notstatic);
 
-extern char *gcndup(const char *s, size_t n) {
+extern char
+*gcndup(const char *s, size_t n) {
 	char *ns;
 
 	gcdisable();
@@ -534,18 +583,21 @@ extern char *gcndup(const char *s, size_t n) {
 	RefReturn(result);
 }
 
-extern char *gcdup(const char *s) {
+extern char
+*gcdup(const char *s) {
 	return gcndup(s, strlen(s));
 }
 
-static void *StringCopy(void *op) {
+static void
+*StringCopy(void *op) {
 	size_t n = strlen(op) + 1;
 	char *np = gcalloc(n, &StringTag);
 	memcpy(np, op, n);
 	return np;
 }
 
-static size_t StringScan(void *p) {
+static size_t
+StringScan(void *p) {
 	return strlen(p) + 1;
 }
 
@@ -556,51 +608,61 @@ static size_t StringScan(void *p) {
  *	contain pointers or '\0' until after sealbuffer() has been called.
  */
 
-extern Buffer *openbuffer(size_t minsize) {
+extern Buffer
+*openbuffer(size_t minsize) {
 	Buffer *buf;
-	if (minsize < 500)
+	if (minsize < 500) {
 		minsize = 500;
+	}
 	buf = ealloc(offsetof(Buffer, str[minsize]));
 	buf->len = minsize;
 	buf->current = 0;
 	return buf;
 }
 
-extern Buffer *expandbuffer(Buffer *buf, size_t minsize) {
+extern Buffer
+*expandbuffer(Buffer *buf, size_t minsize) {
 	buf->len += (minsize > buf->len) ? minsize : buf->len;
 	buf = erealloc(buf, offsetof(Buffer, str[buf->len]));
 	return buf;
 }
 
-extern char *sealbuffer(Buffer *buf) {
+extern char
+*sealbuffer(Buffer *buf) {
 	char *s = gcdup(buf->str);
 	efree(buf);
 	return s;
 }
 
-extern char *sealcountedbuffer(Buffer *buf) {
+extern char
+*sealcountedbuffer(Buffer *buf) {
 	char *s = gcndup(buf->str, buf->current);
 	efree(buf);
 	return s;
 }
 
-extern Buffer *bufncat(Buffer *buf, const char *s, size_t len) {
-	while (buf->current + len >= buf->len)
+extern Buffer
+*bufncat(Buffer *buf, const char *s, size_t len) {
+	while (buf->current + len >= buf->len) {
 		buf = expandbuffer(buf, buf->current + len - buf->len);
+	}
 	memcpy(buf->str + buf->current, s, len);
 	buf->current += len;
 	return buf;
 }
 
-extern Buffer *bufcat(Buffer *buf, const char *s) {
+extern Buffer
+*bufcat(Buffer *buf, const char *s) {
 	return bufncat(buf, s, strlen(s));
 }
 
-extern Buffer *bufputc(Buffer *buf, char c) {
+extern Buffer
+*bufputc(Buffer *buf, char c) {
 	return bufncat(buf, &c, 1);
 }
 
-extern void freebuffer(Buffer *buf) {
+extern void
+freebuffer(Buffer *buf) {
 	efree(buf);
 }
 
@@ -610,7 +672,8 @@ extern void freebuffer(Buffer *buf) {
  * memdump -- print out all of gc space, as best as possible
  */
 
-static char *tree1name(NodeKind k) {
+static char
+*tree1name(NodeKind k) {
 	switch(k) {
 	default:	panic("tree1name: bad node kind %d", k);
 	case nPrim:	return "Prim";
@@ -622,7 +685,8 @@ static char *tree1name(NodeKind k) {
 	}
 }
 
-static char *tree2name(NodeKind k) {
+static char
+*tree2name(NodeKind k) {
 	switch(k) {
 	default:	panic("tree2name: bad node kind %d", k);
 	case nAssign:	return "Assign";
@@ -654,7 +718,8 @@ static char *tree2name(NodeKind k) {
 #include "term.h"
 
 
-static size_t dump(Tag *t, void *p) {
+static size_t
+dump(Tag *t, void *p) {
 	char *s = t->typename;
 	print("%8ux %s\t", p, s);
 

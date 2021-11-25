@@ -26,13 +26,15 @@ struct Proc {
 static Proc *proclist = NULL;
 
 /* mkproc -- create a Proc structure */
-extern Proc *mkproc(int pid, Boolean background) {
+extern Proc
+*mkproc(int pid, Boolean background) {
 	Proc *proc;
-	for (proc = proclist; proc != NULL; proc = proc->next)
+	for (proc = proclist; proc != NULL; proc = proc->next) {
 		if (proc->pid == pid) {		/* are we recycling pids? */
 			assert(!proc->alive);	/* if false, violates unix semantics */
 			break;
 		}
+	}
 	if (proc == NULL) {
 		proc = ealloc(sizeof (Proc));
 		proc->next = proclist;
@@ -45,14 +47,16 @@ extern Proc *mkproc(int pid, Boolean background) {
 }
 
 /* efork -- fork (if necessary) and clean up as appropriate */
-extern int efork(Boolean parent, Boolean background) {
+extern int
+efork(Boolean parent, Boolean background) {
 	if (parent) {
 		int pid = fork();
 		switch (pid) {
 		default: {	/* parent */
 			Proc *proc = mkproc(pid, background);
-			if (proclist != NULL)
+			if (proclist != NULL) {
 				proclist->prev = proc;
+			}
 			proclist = proc;
 			return pid;
 		}
@@ -75,7 +79,8 @@ static struct rusage wait_rusage;
 #endif
 
 /* dowait -- a wait wrapper that interfaces with signals */
-static int dowait(int *statusp) {
+static int
+dowait(int *statusp) {
 	int n;
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
@@ -86,8 +91,9 @@ static int dowait(int *statusp) {
 #else
 			wait((void *) statusp);
 #endif
-	} else
+	} else {
 		n = -2;
+	}
 	slow = FALSE;
 	if (n == -2) {
 		errno = EINTR;
@@ -97,9 +103,10 @@ static int dowait(int *statusp) {
 }
 
 /* reap -- mark a process as dead and attach its exit status */
-static void reap(int pid, int status) {
+static void
+reap(int pid, int status) {
 	Proc *proc;
-	for (proc = proclist; proc != NULL; proc = proc->next)
+	for (proc = proclist; proc != NULL; proc = proc->next) {
 		if (proc->pid == pid) {
 			assert(proc->alive);
 			proc->alive = FALSE;
@@ -109,54 +116,65 @@ static void reap(int pid, int status) {
 #endif
 			return;
 		}
+	}
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == 0 */
-extern int ewait(int pid, Boolean interruptible, void *rusage) {
+extern int
+ewait(int pid, Boolean interruptible, void *rusage) {
 	Proc *proc;
 top:
-	for (proc = proclist; proc != NULL; proc = proc->next)
+	for (proc = proclist; proc != NULL; proc = proc->next) {
 		if (proc->pid == pid || (pid == 0 && !proc->alive)) {
 			int status;
 			if (proc->alive) {
 				int deadpid;
-				while ((deadpid = dowait(&proc->status)) != pid)
-					if (deadpid != -1)
+				while ((deadpid = dowait(&proc->status)) != pid) {
+					if (deadpid != -1) {
 						reap(deadpid, proc->status);
-					else if (errno != EINTR)
+					} else if (errno != EINTR) {
 						fail("es:ewait", "wait: %s", esstrerror(errno));
-					else if (interruptible)
+					} else if (interruptible) {
 						SIGCHK();
+					}
+				}
 				proc->alive = FALSE;
 #if HAVE_WAIT3
 				proc->rusage = wait_rusage;
 #endif
 			}
-			if (proc->next != NULL)
+			if (proc->next != NULL) {
 				proc->next->prev = proc->prev;
-			if (proc->prev != NULL)
+			}
+			if (proc->prev != NULL) {
 				proc->prev->next = proc->next;
-			else
+			} else {
 				proclist = proc->next;
+			}
 			status = proc->status;
-			if (proc->background)
+			if (proc->background) {
 				printstatus(proc->pid, status);
+			}
 			efree(proc);
 #if HAVE_WAIT3
-			if (rusage != NULL)
+			if (rusage != NULL) {
 				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
+			}
 #else
 			assert(rusage == NULL);
 #endif
 			return status;
 		}
+	}
 	if (pid == 0) {
 		int status;
 		while ((pid = dowait(&status)) == -1) {
-			if (errno != EINTR)
+			if (errno != EINTR) {
 				fail("es:ewait", "wait: %s", esstrerror(errno));
-			if (interruptible)
+			}
+			if (interruptible) {
 				SIGCHK();
+			}
 		}
 		reap(pid, status);
 		goto top;
@@ -171,11 +189,12 @@ static List
 *prim_apids(List *list, Binding *binding, int evalflags) {
 	Proc *p;
 	Ref(List *, lp, NULL);
-	for (p = proclist; p != NULL; p = p->next)
+	for (p = proclist; p != NULL; p = p->next) {
 		if (p->background && p->alive) {
 			Term *t = mkstr(str("%d", p->pid));
 			lp = mklist(t, lp);
 		}
+	}
 	/* TODO: sort the return value, but by number? */
 	RefReturn(lp);
 }
@@ -183,9 +202,9 @@ static List
 static List
 *prim_wait(List *list, Binding *binding, int evalflags) {
 	int pid;
-	if (list == NULL)
+	if (list == NULL) {
 		pid = 0;
-	else if (list->next == NULL) {
+	} else if (list->next == NULL) {
 		pid = atoi(getstr(list->term));
 		if (pid <= 0) {
 			fail("$&wait", "wait: %d: bad pid", pid);

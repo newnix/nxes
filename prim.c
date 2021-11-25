@@ -5,11 +5,13 @@
 
 static Dict *prims;
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
+extern List
+*prim(char *s, List *list, Binding *binding, int evalflags) {
 	List *(*p)(List *, Binding *, int);
 	p = (List *(*)(List *, Binding *, int)) dictget(prims, s);
-	if (p == NULL)
+	if (p == NULL) {
 		fail("es:prim", "unknown primitive: %s", s);
+	}
 	return (*p)(list, binding, evalflags);
 }
 
